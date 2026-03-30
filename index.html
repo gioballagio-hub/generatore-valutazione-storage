@@ -912,7 +912,13 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       ch.push(bodyMixed([
         new TextRun({ text: 'A) Accumulo durante la pausa pranzo', bold: true, size: 22, font: 'Calibri' }),
       ]));
-      ch.push(body('Durante la pausa di ' + vars.orePausaLabel + ', quando la produzione dell\u2019impianto supera i consumi, lo storage accumula fino a ' + vars.kWhAccPomeriggio + ' kWh che vengono restituiti nelle ore di maggior fabbisogno.' + (c.superaCap ? ' (Il calcolo teorico porterebbe a ' + vars.kWhCalcolati + ' kWh, ma viene naturalmente limitato dalla capacit\u00e0 dello storage.)' : '')));
+      var fraseAccumulo = 'Durante la pausa pranzo di ' + vars.orePausaLabel + ', l\u2019impianto fotovoltaico continua a produrre energia. ';
+      if (c.superaCap) {
+        fraseAccumulo += 'La produzione oraria (' + vars.kWhPerOra + ' kWh/h \u00D7 ' + vars.orePausaLabel + ' = ' + vars.kWhCalcolati + ' kWh) supera la capacit\u00e0 complessiva dello storage (' + vars.capacitaStorage + ' kWh), che viene quindi caricato completamente. L\u2019energia accumulata viene restituita nelle ore di maggior fabbisogno.';
+      } else {
+        fraseAccumulo += 'In queste ore, lo storage accumula fino a ' + vars.kWhAccPomeriggio + ' kWh (pari alla produzione di ' + vars.kWhPerOra + ' kWh/h \u00D7 ' + vars.orePausaLabel + '), energia che viene restituita nelle ore di maggior fabbisogno.';
+      }
+      ch.push(body(fraseAccumulo));
       ch.push(emptyLine());
       ch.push(bodyMixed([
         new TextRun({ text: 'B) Accumulo nei weekend', bold: true, size: 22, font: 'Calibri' }),
