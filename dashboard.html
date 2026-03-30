@@ -6,6 +6,7 @@
   <title>Dashboard Energetica - Expofin</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
@@ -256,7 +257,7 @@
       var rispTot_base = rispA_base + rispB_base;
 
       // Calcolo anno per anno
-      var cashflow = [-costoEff];
+      var cashflow = [{x: 0, y: -costoEff}];
       var risparmiAnno = [];
       var cumulativo = -costoEff;
       var paybackCalc = 0;
@@ -270,11 +271,11 @@
         var rispTot_y = rispA_y + rispB_y;
         risparmiAnno.push(rispTot_y);
         cumulativo += rispTot_y;
-        cashflow.push(Math.round(cumulativo));
+        cashflow.push({x: y, y: Math.round(cumulativo)});
 
         if (!paybackTrovato && cumulativo >= 0) {
           // Interpolazione per payback preciso
-          var prevCum = cashflow[y - 1];
+          var prevCum = cashflow[y - 1].y;
           paybackCalc = (y - 1) + (-prevCum / rispTot_y);
           paybackTrovato = true;
         }
@@ -357,19 +358,41 @@
         });
       }
 
-      // Chart 2: Cashflow cumulativo
+      // Chart 2: Cashflow cumulativo con linea payback
+      var paybackLabel = c.payback < 99 ? 'PAYBACK: anno ' + c.payback.toFixed(1).replace('.', ',') : '';
+      var cashflowAnnotations = {
+        zeroLine: {
+          type: 'line', yMin: 0, yMax: 0,
+          borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2, borderDash: [6, 4],
+        },
+      };
+      if (c.payback < 10) {
+        cashflowAnnotations.paybackLine = {
+          type: 'line', xMin: c.payback, xMax: c.payback,
+          borderColor: '#f59e0b', borderWidth: 3, borderDash: [8, 4],
+          label: {
+            display: true, content: paybackLabel,
+            position: 'start', backgroundColor: '#f59e0b', color: '#000',
+            font: { weight: 'bold', size: 13 }, padding: 6, borderRadius: 6,
+          },
+        };
+        cashflowAnnotations.paybackPoint = {
+          type: 'point', xValue: c.payback, yValue: 0,
+          radius: 10, backgroundColor: '#f59e0b', borderColor: '#fff', borderWidth: 3,
+        };
+      }
       if (chartCashflow) {
         chartCashflow.data.datasets[0].data = c.cashflow;
+        chartCashflow.options.plugins.annotation.annotations = cashflowAnnotations;
         chartCashflow.update();
       } else {
         chartCashflow = new Chart(document.getElementById('chartCashflow'), {
           type: 'line',
           data: {
-            labels: ['Anno 0','1','2','3','4','5','6','7','8','9','10'],
             datasets: [{
               label: 'Flusso cumulativo',
               data: c.cashflow,
-              borderColor: '#22c55e',
+              borderColor: '#22c55e', borderWidth: 3,
               backgroundColor: function(ctx) {
                 var g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 280);
                 g.addColorStop(0, 'rgba(34,197,94,0.3)');
@@ -377,15 +400,20 @@
                 return g;
               },
               fill: true, tension: 0.3,
-              pointBackgroundColor: function(ctx) { return ctx.raw >= 0 ? '#22c55e' : '#ef4444'; },
-              pointRadius: 5, pointHoverRadius: 7,
+              pointBackgroundColor: function(ctx) { var v = ctx.raw.y !== undefined ? ctx.raw.y : ctx.raw; return v >= 0 ? '#22c55e' : '#ef4444'; },
+              pointRadius: 6, pointHoverRadius: 9,
             }],
           },
           options: {
             responsive: true,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return fmt(ctx.raw) + ' \u20AC'; } } } },
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: function(ctx) { return fmt(ctx.raw.y !== undefined ? ctx.raw.y : ctx.raw) + ' \u20AC'; } } },
+              annotation: { annotations: cashflowAnnotations },
+              datalabels: { display: false },
+            },
             scales: {
-              x: { grid: { color: '#1e3a5f' }, ticks: { color: '#64748b' } },
+              x: { type: 'linear', min: 0, max: 10, grid: { color: '#1e3a5f' }, ticks: { color: '#64748b', stepSize: 1, callback: function(v) { return v === 0 ? 'Anno 0' : v; } } },
               y: { grid: { color: '#1e3a5f' }, ticks: { color: '#64748b', callback: function(v) { return fmt(v) + ' \u20AC'; } } },
             },
           },
