@@ -104,6 +104,10 @@
           </select>
         </div>
         <div class="form-group">
+          <label for="pctNonConsumata">% energia non consumata</label>
+          <input type="number" id="pctNonConsumata" value="25" step="1" min="0" max="100">
+        </div>
+        <div class="form-group">
           <label for="oreLuce">Ore luce produttive FTV (h/gg)</label>
           <input type="number" id="oreLuce" value="7" step="0.5" min="1" max="14">
         </div>
@@ -310,6 +314,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         orePausa: parseFloat(document.getElementById('orePausa').value) || 0,
         capacitaStorage: parseFloat(document.getElementById('capacitaStorage').value) || 0,
         nStorage: parseInt(document.getElementById('nStorage').value) || 1,
+        pctNonConsumata: parseFloat(document.getElementById('pctNonConsumata').value) || 25,
         oreLuce: parseFloat(document.getElementById('oreLuce').value) || 7,
         costoStorage: parseFloat(document.getElementById('costoStorage').value) || 0,
       };
@@ -319,7 +324,8 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       const produzioneAnnua = inp.kWp * 1200;
       const mediaGiornaliera = Math.round(produzioneAnnua / 365);
       const kWhPerOra = Math.round(mediaGiornaliera / inp.oreLuce);
-      const energiaImmessa = Math.round(produzioneAnnua * 0.25);
+      const pctNC = (inp.pctNonConsumata || 25) / 100;
+      const energiaImmessa = Math.round(produzioneAnnua * pctNC);
       const delta = inp.costoAcquisto - inp.prezzoVendita;
       const n = inp.nStorage || 1;
       const capacitaTotale = inp.capacitaStorage * n;
@@ -575,6 +581,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       p.set('ns', inp.nStorage);
       p.set('costo', inp.costoStorage);
       p.set('ol', inp.oreLuce);
+      p.set('pnc', inp.pctNonConsumata);
       return base + '?' + p.toString();
     }
 
@@ -605,6 +612,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         produzioneAnnua: fmtNum(c.produzioneAnnua),
         mediaGiornaliera: fmtNum(c.mediaGiornaliera),
         oreLuce: inp.oreLuce,
+        pctNonConsumata: inp.pctNonConsumata,
         energiaImmessa: fmtNum(c.energiaImmessa),
         prezzoVendita: inp.prezzoVendita.toFixed(2).replace('.', ','),
         costoAcquisto: inp.costoAcquisto.toFixed(2).replace('.', ','),
@@ -790,6 +798,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         nomeAzienda: inp.nomeAzienda, nomeCorto: nomeCorto,
         kWp: fmtNum(inp.kWp), produzioneAnnua: fmtNum(c.produzioneAnnua),
         mediaGiornaliera: fmtNum(c.mediaGiornaliera), oreLuce: inp.oreLuce,
+        pctNonConsumata: inp.pctNonConsumata,
         energiaImmessa: fmtNum(c.energiaImmessa),
         prezzoVendita: inp.prezzoVendita.toFixed(2).replace('.', ','),
         costoAcquisto: inp.costoAcquisto.toFixed(2).replace('.', ','),

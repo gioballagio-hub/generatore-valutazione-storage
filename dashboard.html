@@ -217,6 +217,7 @@
       nStorage: parseInt(params.get('ns')) || 1,
       costoStorage: parseFloat(params.get('costo')) || 70470,
       oreLuce: parseFloat(params.get('ol')) || 7,
+      pctNonConsumata: parseFloat(params.get('pnc')) || 25,
     };
 
     function fmt(n) { return Math.round(n).toLocaleString('it-IT'); }
@@ -225,7 +226,8 @@
     var produzioneAnnua = D.kWp * 1200;
     var mediaGG = Math.round(produzioneAnnua / 365);
     var kWhPerOra = Math.round(mediaGG / D.oreLuce);
-    var energiaImmessa = Math.round(produzioneAnnua * 0.25);
+    var pctNC = (D.pctNonConsumata || 25) / 100;
+    var energiaImmessa = Math.round(produzioneAnnua * pctNC);
     var nStor = D.nStorage || 1;
     var capTotale = D.capacitaStorage * nStor;
     var costoStorTotale = D.costoStorage * nStor;
@@ -422,7 +424,7 @@
 
       // Chart Utilizzo (fisso, non cambia con aumento)
       if (!chartUtilizzo) {
-        var autoconsumo = produzioneAnnua * 0.75;
+        var autoconsumo = produzioneAnnua * (1 - pctNC);
         var recuperoStorage = kWhRecuperati;
         var ancoraImmessa = Math.max(0, energiaImmessa - recuperoStorage);
         var utilizzoPlugins = {
