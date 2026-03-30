@@ -25,9 +25,13 @@
     .calc-item .value { font-size: 1.1rem; font-weight: 700; color: #1a3a5c; }
     .calc-item.highlight { background: #e8f4e8; }
     .calc-item.highlight .value { color: #2d7a2d; }
-    .btn { display: block; width: 100%; padding: 14px; background: #2e75b6; color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-row { display: flex; gap: 12px; }
+    .btn { display: block; width: 100%; padding: 14px; background: #2e75b6; color: #fff; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     .btn:hover { background: #1e5a96; }
     .btn:active { transform: scale(0.98); }
+    .btn.btn-green { background: #1a7a3a; }
+    .btn.btn-green:hover { background: #145f2d; }
+    .btn small { display: block; font-weight: 400; font-size: 0.75rem; opacity: 0.85; margin-top: 2px; }
     .testi-section { margin-top: 0; }
     .testi-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
     .testi-toggle .arrow { transition: transform 0.2s; font-size: 1.2rem; color: #999; }
@@ -224,7 +228,10 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       </div>
     </div>
 
-    <button class="btn" onclick="generaDocumento()">Genera Documento .docx</button>
+    <div class="btn-row">
+      <button class="btn" onclick="generaDocumento()">Documento Tecnico<small>Versione con calcoli dettagliati</small></button>
+      <button class="btn btn-green" onclick="generaPropostaCommerciale()">Proposta Commerciale<small>Versione persuasiva per il cliente</small></button>
+    </div>
   </div>
 
   <script>
@@ -535,6 +542,192 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       const a = document.createElement('a');
       a.href = url;
       a.download = 'Valutazione economica Storage - ' + inp.nomeAzienda + '.docx';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ====== PROPOSTA COMMERCIALE ======
+    async function generaPropostaCommerciale() {
+      const inp = getInputs();
+      const c = calcola(inp);
+      const nomeCorto = nomeBreve(inp.nomeAzienda);
+      const { Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign, PageBreak, TabStopType, TabStopPosition } = docx;
+
+      const border = { style: BorderStyle.SINGLE, size: 1, color: 'D0D0D0' };
+      const borders = { top: border, bottom: border, left: border, right: border };
+      const noBorders = { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } };
+
+      function heading(text, size) {
+        return new Paragraph({ spacing: { before: 300, after: 150 }, children: [new TextRun({ text: text, bold: true, size: size || 28, color: '1A3A5C', font: 'Calibri' })] });
+      }
+      function body(text, opts) {
+        return new Paragraph(Object.assign({ spacing: { after: 120, line: 276 }, children: [new TextRun({ text: text, size: 22, font: 'Calibri' })] }, opts || {}));
+      }
+      function bodyBold(text) {
+        return new Paragraph({ spacing: { after: 120, line: 276 }, children: [new TextRun({ text: text, bold: true, size: 22, font: 'Calibri' })] });
+      }
+      function bodyMixed(runs) {
+        return new Paragraph({ spacing: { after: 120, line: 276 }, children: runs });
+      }
+      function bullet(text, ref) {
+        return new Paragraph({ numbering: { reference: ref || 'comm_bullets', level: 0 }, spacing: { after: 80, line: 276 }, children: [new TextRun({ text: text, size: 22, font: 'Calibri' })] });
+      }
+      function emptyLine() { return new Paragraph({ spacing: { after: 60 }, children: [] }); }
+
+      function kvRow(label, value, highlight) {
+        return new TableRow({
+          children: [
+            new TableCell({
+              borders: noBorders,
+              width: { size: 5500, type: WidthType.DXA },
+              margins: { top: 60, bottom: 60, left: 120, right: 120 },
+              children: [new Paragraph({ children: [new TextRun({ text: label, size: 22, font: 'Calibri', color: '555555' })] })],
+            }),
+            new TableCell({
+              borders: noBorders,
+              width: { size: 3860, type: WidthType.DXA },
+              margins: { top: 60, bottom: 60, left: 120, right: 120 },
+              shading: highlight ? { fill: 'E8F4E8', type: ShadingType.CLEAR } : undefined,
+              children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: value, bold: true, size: 22, font: 'Calibri', color: highlight ? '1A7A3A' : '1A3A5C' })] })],
+            }),
+          ],
+        });
+      }
+
+      var ch = [];
+
+      // === INTESTAZIONE ===
+      ch.push(new Paragraph({
+        spacing: { after: 0 },
+        children: [
+          new TextRun({ text: 'PROPOSTA DI EFFICIENTAMENTO ENERGETICO', bold: true, size: 36, color: '1A3A5C', font: 'Calibri' }),
+        ],
+      }));
+      ch.push(new Paragraph({
+        spacing: { after: 40 },
+        children: [
+          new TextRun({ text: 'Sistema di accumulo energetico allo stato solido', size: 26, color: '666666', font: 'Calibri', italics: true }),
+        ],
+      }));
+      ch.push(new Paragraph({
+        spacing: { before: 60, after: 200 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: '2E75B6', space: 1 } },
+        children: [],
+      }));
+
+      // Info cliente e data
+      ch.push(new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        columnWidths: [5500, 3860],
+        rows: [
+          kvRow('Cliente', inp.nomeAzienda),
+          kvRow('Data', oggi()),
+          kvRow('Impianto FTV esistente', fmtNum(inp.kWp) + ' kWp'),
+          kvRow('Capacit\u00e0 storage proposta', fmtNum(inp.capacitaStorage) + ' kWh'),
+        ],
+      }));
+      ch.push(emptyLine());
+
+      // === 1. IL CONTESTO ===
+      ch.push(heading('1. Il contesto'));
+      ch.push(body('La Vostra azienda dispone gi\u00e0 di un impianto fotovoltaico da ' + fmtNum(inp.kWp) + ' kWp, con una produzione annua stimata di circa ' + fmtNum(c.produzioneAnnua) + ' kWh.'));
+      ch.push(body('Attualmente, circa il 25% di questa energia (' + fmtNum(c.energiaImmessa) + ' kWh/anno) non viene consumata e viene immessa in rete a un prezzo di ' + inp.prezzoVendita.toFixed(2).replace('.', ',') + ' \u20AC/kWh, ben al di sotto del costo di acquisto dalla rete di ' + inp.costoAcquisto.toFixed(2).replace('.', ',') + ' \u20AC/kWh.'));
+      ch.push(bodyMixed([
+        new TextRun({ text: 'Questo significa che la Vostra azienda perde ', size: 22, font: 'Calibri' }),
+        new TextRun({ text: c.delta.toFixed(2).replace('.', ',') + ' \u20AC per ogni kWh', bold: true, size: 22, font: 'Calibri' }),
+        new TextRun({ text: ' di energia prodotta e non utilizzata. Un sistema di accumulo permette di recuperare questa differenza, trasformando un costo nascosto in un risparmio concreto.', size: 22, font: 'Calibri' }),
+      ]));
+
+      // === 2. LA SOLUZIONE ===
+      ch.push(heading('2. La soluzione proposta'));
+      ch.push(body('Proponiamo l\u2019installazione di un sistema di accumulo allo stato solido da ' + fmtNum(inp.capacitaStorage) + ' kWh, dimensionato su misura per il Vostro profilo di consumo.'));
+      ch.push(body('Il sistema opera in due modalit\u00e0 complementari:'));
+      ch.push(emptyLine());
+      ch.push(bodyMixed([
+        new TextRun({ text: 'A) Accumulo durante la pausa pranzo', bold: true, size: 22, font: 'Calibri' }),
+      ]));
+      ch.push(body('Durante la pausa di ' + orePausaLabel(inp.orePausa) + ', quando la produzione dell\u2019impianto supera i consumi, lo storage accumula fino a ' + fmtNum(c.kWhAccPomeriggio) + ' kWh che vengono restituiti nelle ore di maggior fabbisogno.' + (c.superaCap ? ' (Il calcolo teorico porterebbe a ' + fmtNum(c.kWhCalcolati) + ' kWh, ma viene naturalmente limitato dalla capacit\u00e0 dello storage.)' : '')));
+      ch.push(emptyLine());
+      ch.push(bodyMixed([
+        new TextRun({ text: 'B) Accumulo nei weekend', bold: true, size: 22, font: 'Calibri' }),
+      ]));
+      ch.push(body('Il sabato, con l\u2019azienda ferma, lo storage si ricarica completamente (' + fmtNum(inp.capacitaStorage) + ' kWh) e l\u2019energia accumulata viene utilizzata il luned\u00ec mattina, evitando l\u2019acquisto dalla rete nelle prime ore della settimana.'));
+
+      // === 3. I NUMERI ===
+      ch.push(heading('3. Il ritorno economico'));
+      ch.push(body('Ecco i numeri della Vostra convenienza:'));
+      ch.push(emptyLine());
+
+      // Tabella risultati
+      ch.push(new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        columnWidths: [5500, 3860],
+        rows: [
+          kvRow('Risparmio da accumulo feriale (A)', fmtNum(c.risparmioA) + ' \u20AC/anno'),
+          kvRow('Risparmio da accumulo weekend (B)', fmtNum(c.risparmioB) + ' \u20AC/anno'),
+          kvRow('Risparmio totale annuo', fmtNum(c.risparmioTotale) + ' \u20AC/anno', true),
+          kvRow('', ''),
+          kvRow('Costo dello storage', fmtNum(inp.costoStorage) + ' \u20AC'),
+          kvRow('Beneficio Iper-ammortamento (43,2%)', '\u2013 ' + fmtNum(inp.costoStorage - c.costoEffettivo) + ' \u20AC'),
+          kvRow('Costo effettivo dell\u2019investimento', fmtNum(c.costoEffettivo) + ' \u20AC'),
+          kvRow('', ''),
+          kvRow('Tempo di ritorno dell\u2019investimento', c.payback.toFixed(1).replace('.', ',') + ' anni', true),
+        ],
+      }));
+      ch.push(emptyLine());
+
+      ch.push(bodyMixed([
+        new TextRun({ text: 'In sintesi: l\u2019investimento si ripaga in ', size: 22, font: 'Calibri' }),
+        new TextRun({ text: 'circa ' + c.payback.toFixed(1).replace('.', ',') + ' anni', bold: true, size: 24, font: 'Calibri', color: '1A7A3A' }),
+        new TextRun({ text: ', dopo i quali il risparmio di ' + fmtNum(c.risparmioTotale) + ' \u20AC/anno diventa puro guadagno per la Vostra azienda.', size: 22, font: 'Calibri' }),
+      ]));
+
+      // === 4. PERCHE\u0300 CONVIENE ===
+      ch.push(heading('4. Perch\u00e9 conviene agire ora'));
+      ch.push(body('Il tempo di ritorno calcolato \u00e8 gi\u00e0 molto favorevole, ma potr\u00e0 migliorare ulteriormente grazie a:'));
+      ch.push(bullet('l\u2019aumento atteso del costo dell\u2019energia, che amplifica il valore del risparmio', 'comm_bullets'));
+      ch.push(bullet('la possibilit\u00e0 di ottimizzare i costi con l\u2019arbitraggio tra fasce orarie (F1\u2013F2\u2013F3)', 'comm_bullets'));
+      ch.push(bullet('la protezione da micro-interruzioni e buchi di tensione, che possono causare danni alla produzione ben superiori al costo dell\u2019energia', 'comm_bullets'));
+      ch.push(bullet('la possibilit\u00e0 di cumulare ulteriori incentivi (Nuova Sabatini, Conto Termico 3.0)', 'comm_bullets'));
+
+      // === 5. MODALITA\u0300 ===
+      ch.push(heading('5. Modalit\u00e0 di realizzazione'));
+      ch.push(body('L\u2019intervento pu\u00f2 essere realizzato secondo la formula pi\u00f9 adatta alle Vostre esigenze:'));
+      ch.push(bullet('Investimento diretto \u2014 massimo risparmio nel lungo periodo', 'comm_bullets2'));
+      ch.push(bullet('Finanziamento agevolato \u2014 rate compatibili con il risparmio generato', 'comm_bullets2'));
+      ch.push(bullet('E.P.C. (Energy Performance Contract) \u2014 nessun investimento iniziale, remunerazione legata ai risparmi effettivi', 'comm_bullets2'));
+
+      // === CHIUSURA ===
+      ch.push(new Paragraph({
+        spacing: { before: 300, after: 200 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: '2E75B6', space: 1 } },
+        children: [],
+      }));
+      ch.push(bodyMixed([
+        new TextRun({ text: 'Un sistema di accumulo dimensionato su misura: massimo ritorno economico, affidabilit\u00e0 operativa nel tempo e un passo concreto verso l\u2019indipendenza energetica della Vostra azienda.', bold: true, size: 22, font: 'Calibri', color: '1A3A5C' }),
+      ]));
+
+      const doc = new Document({
+        styles: {
+          default: { document: { run: { font: 'Calibri', size: 22 } } },
+        },
+        numbering: {
+          config: [
+            { reference: 'comm_bullets', levels: [{ level: 0, format: LevelFormat.BULLET, text: '\u2022', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] },
+            { reference: 'comm_bullets2', levels: [{ level: 0, format: LevelFormat.BULLET, text: '\u2022', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] },
+          ],
+        },
+        sections: [{
+          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1200, right: 1200, bottom: 1200, left: 1200 } } },
+          children: ch,
+        }],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Proposta Storage - ' + inp.nomeAzienda + '.docx';
       a.click();
       URL.revokeObjectURL(url);
     }
