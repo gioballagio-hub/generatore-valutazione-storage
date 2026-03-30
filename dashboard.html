@@ -164,10 +164,6 @@
 
     <div class="charts-row">
       <div class="chart-card">
-        <h3>Confronto costi energia</h3>
-        <canvas id="chartCosti"></canvas>
-      </div>
-      <div class="chart-card">
         <h3>Utilizzo energia FTV</h3>
         <canvas id="chartUtilizzo"></canvas>
       </div>
@@ -302,35 +298,7 @@
       },
     });
 
-    // Chart 3: Confronto costi (bar)
-    var costoSenza = Math.round(energiaImmessa * D.costoAcquisto);
-    var ricavoVendita = Math.round(energiaImmessa * D.prezzoVendita);
-    var costoConStorage = Math.round(energiaImmessa * D.costoAcquisto - rispTot);
-    new Chart(document.getElementById('chartCosti'), {
-      type: 'bar',
-      data: {
-        labels: ['Senza storage', 'Con storage'],
-        datasets: [{
-          label: 'Costo energia non autoconsumata',
-          data: [Math.round(energiaImmessa * D.prezzoVendita), Math.round(energiaImmessa * D.prezzoVendita) + rispTot],
-          backgroundColor: ['#ef4444', '#22c55e'],
-          borderWidth: 0,
-          borderRadius: 8,
-          barThickness: 60,
-        }],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: function(ctx) { return fmt(ctx.raw) + ' \u20AC/anno'; } } },
-        },
-        scales: {
-          x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 13 } } },
-          y: { grid: { color: '#1e3a5f' }, ticks: { color: '#64748b', callback: function(v) { return fmt(v) + ' \u20AC'; } } },
-        },
-      },
-    });
+
 
     // Chart 4: Utilizzo energia (doughnut)
     var autoconsumo = produzioneAnnua * 0.75;
