@@ -63,6 +63,10 @@
         <div class="form-group">
           <label for="logoCliente">Logo Cliente (opzionale)</label>
           <input type="file" id="logoCliente" accept="image/png,image/jpeg" style="font-size:0.85rem;">
+          <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+            <input type="text" id="sitoCliente" placeholder="es. www.azienda.it" style="flex:1; font-size:0.85rem; padding:6px 10px;">
+            <button type="button" onclick="cercaLogoCliente()" style="padding:6px 12px; font-size:0.8rem; background:#2e75b6; color:#fff; border:none; border-radius:6px; cursor:pointer; white-space:nowrap;">Cerca logo</button>
+          </div>
           <div id="logoPreview" style="margin-top:6px;"></div>
         </div>
         <div class="form-group" style="align-items:center; justify-content:center;">
@@ -244,7 +248,7 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
   </div>
 
   <script>
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, LevelFormat, ImageRun, Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign, TabStopType, TabStopPosition } = docx;
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, LevelFormat, ImageRun, Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign, TabStopType, TabStopPosition, Header } = docx;
 
     function getInputs() {
       return {
@@ -347,6 +351,48 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       });
     }
 
+    // Cerca logo dal sito del cliente
+    async function cercaLogoCliente() {
+      var sito = document.getElementById('sitoCliente').value.trim();
+      if (!sito) { alert('Inserisci il sito web del cliente'); return; }
+      var dominio = sito.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
+      var preview = document.getElementById('logoPreview');
+      preview.innerHTML = '<span style="font-size:0.8rem;color:#888;">Cercando logo...</span>';
+
+      // Prova Clearbit Logo API (alta qualità)
+      var urls = [
+        'https://logo.clearbit.com/' + dominio,
+        'https://www.google.com/s2/favicons?domain=' + dominio + '&sz=128',
+      ];
+
+      for (var i = 0; i < urls.length; i++) {
+        try {
+          var resp = await fetch(urls[i]);
+          if (resp.ok) {
+            var blob = await resp.blob();
+            if (blob.size > 500) { // ignora icone troppo piccole
+              var file = new File([blob], 'logo-cliente.png', { type: blob.type });
+              var dt = new DataTransfer();
+              dt.items.add(file);
+              document.getElementById('logoCliente').files = dt.files;
+              var img = document.createElement('img');
+              img.style.maxHeight = '60px';
+              img.style.objectFit = 'contain';
+              img.src = URL.createObjectURL(blob);
+              preview.innerHTML = '';
+              preview.appendChild(img);
+              var nota = document.createElement('span');
+              nota.style.cssText = 'font-size:0.75rem;color:#2d7a2d;margin-left:8px;';
+              nota.textContent = 'Logo trovato da ' + dominio;
+              preview.appendChild(nota);
+              return;
+            }
+          }
+        } catch(e) { /* continua con il prossimo URL */ }
+      }
+      preview.innerHTML = '<span style="font-size:0.8rem;color:#c00;">Logo non trovato. Caricalo manualmente.</span>';
+    }
+
     var expofinLogoData = null;
     fetch('logo-expofin.png').then(function(r) { return r.arrayBuffer(); }).then(function(buf) { expofinLogoData = new Uint8Array(buf); });
 
@@ -414,36 +460,39 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       return null;
     }
 
-    function creaIntestazioneLoghi(logoClienteData, nomeAzienda, dataStr, noBorders) {
+    function creaHeaderLoghi(logoClienteData) {
       var nob = { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } };
-      var cellsChildren = [];
 
-      // Cella sinistra: logo cliente (se c'è) oppure nome azienda
       var leftContent = [];
       if (logoClienteData) {
         leftContent.push(new Paragraph({ children: [
-          new ImageRun({ data: logoClienteData.data, type: logoClienteData.type, transformation: { width: 150, height: 60 }, altText: { title: nomeAzienda, description: 'Logo cliente', name: 'logo-cliente' } }),
+          new ImageRun({ data: logoClienteData.data, type: logoClienteData.type, transformation: { width: 120, height: 48 }, altText: { title: 'Cliente', description: 'Logo cliente', name: 'logo-cliente' } }),
         ]}));
+      } else {
+        leftContent.push(new Paragraph({ children: [] }));
       }
-      leftContent.push(new Paragraph({ children: [new TextRun({ text: nomeAzienda, size: 28, bold: true })] }));
-      leftContent.push(new Paragraph({ children: [new TextRun({ text: dataStr, size: 20, color: '888888' })] }));
 
-      // Cella destra: logo Expofin
       var rightContent = [];
       if (expofinLogoData) {
         rightContent.push(new Paragraph({ alignment: AlignmentType.RIGHT, children: [
-          new ImageRun({ data: expofinLogoData, type: 'png', transformation: { width: 140, height: 80 }, altText: { title: 'Expofin', description: 'Logo Expofin', name: 'logo-expofin' } }),
+          new ImageRun({ data: expofinLogoData, type: 'png', transformation: { width: 110, height: 63 }, altText: { title: 'Expofin', description: 'Logo Expofin', name: 'logo-expofin' } }),
         ]}));
+      } else {
+        rightContent.push(new Paragraph({ children: [] }));
       }
 
-      return new Table({
-        width: { size: 9360, type: WidthType.DXA },
-        columnWidths: [5500, 3860],
-        rows: [
-          new TableRow({
-            children: [
-              new TableCell({ borders: nob, width: { size: 5500, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, children: leftContent }),
-              new TableCell({ borders: nob, width: { size: 3860, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, children: rightContent.length ? rightContent : [new Paragraph({ children: [] })] }),
+      return new Header({
+        children: [
+          new Table({
+            width: { size: 9360, type: WidthType.DXA },
+            columnWidths: [5500, 3860],
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({ borders: nob, width: { size: 5500, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, children: leftContent }),
+                  new TableCell({ borders: nob, width: { size: 3860, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, children: rightContent }),
+                ],
+              }),
             ],
           }),
         ],
@@ -500,8 +549,16 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
 
       var children = [];
 
-      // INTESTAZIONE CON LOGHI
-      children.push(creaIntestazioneLoghi(logoCliente, inp.nomeAzienda, oggi()));
+      // Header Word con loghi
+      var wordHeader = creaHeaderLoghi(logoCliente);
+
+      // INTESTAZIONE
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: inp.nomeAzienda, size: 32, bold: true }),
+          new TextRun({ text: '                                                           ' + oggi(), size: 32 }),
+        ],
+      }));
       children.push(separator());
 
       // TITOLO
@@ -609,7 +666,8 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
           ],
         },
         sections: [{
-          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1800, right: 1440, bottom: 1440, left: 1440 } } },
+          headers: { default: wordHeader },
           children: children,
         }],
       });
@@ -673,9 +731,8 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
 
       var ch = [];
 
-      // === LOGHI INTESTAZIONE ===
-      ch.push(creaIntestazioneLoghi(logoCliente, inp.nomeAzienda, oggi()));
-      ch.push(new Paragraph({ spacing: { after: 200 }, children: [] }));
+      // Header Word con loghi
+      var wordHeader = creaHeaderLoghi(logoCliente);
 
       // === TITOLO ===
       ch.push(new Paragraph({
@@ -799,7 +856,8 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
           ],
         },
         sections: [{
-          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1200, right: 1200, bottom: 1200, left: 1200 } } },
+          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1600, right: 1200, bottom: 1200, left: 1200 } } },
+          headers: { default: wordHeader },
           children: ch,
         }],
       });
