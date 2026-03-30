@@ -454,22 +454,19 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
 
     function creaHeaderLoghi(logoClienteData) {
       var { HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom } = docx;
-      // Dimensioni logo: 3,67 x 1,98 cm (= 138 x 75 px)
-      var logoW = 138;
-      var logoH = 75;
-      var vOffset = -108000; // -0,3 cm come da esempio
 
       var headerChildren = [];
 
-      // Logo Expofin — in alto a DESTRA (15,86 cm da sinistra = 5709600 EMU dalla colonna)
+      // Logo Expofin — DESTRA (valori esatti dal file esempio -8)
+      // posH=4946097 posV=-400685 dimensioni 1224000x689610 EMU = 128x72 px
       if (expofinLogoData) {
         headerChildren.push(new ImageRun({
           data: expofinLogoData,
           type: 'png',
-          transformation: { width: logoW, height: logoH },
+          transformation: { width: 128, height: 72 },
           floating: {
-            horizontalPosition: { relative: HorizontalPositionRelativeFrom.COLUMN, offset: 5709600 },
-            verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: vOffset },
+            horizontalPosition: { relative: HorizontalPositionRelativeFrom.COLUMN, offset: 4946097 },
+            verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: -400685 },
             allowOverlap: true,
             behindDocument: false,
             lockAnchor: false,
@@ -479,15 +476,16 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
         }));
       }
 
-      // Logo cliente — in alto a SINISTRA, stesse dimensioni, stesso offset verticale
+      // Logo cliente — SINISTRA (valori esatti dal file esempio -8)
+      // posH=-13832 posV=-327660 dimensioni 1049572x563373 EMU = 110x59 px
       if (logoClienteData) {
         headerChildren.push(new ImageRun({
           data: logoClienteData.data,
           type: logoClienteData.type,
-          transformation: { width: logoW, height: logoH },
+          transformation: { width: 110, height: 59 },
           floating: {
             horizontalPosition: { relative: HorizontalPositionRelativeFrom.COLUMN, offset: 0 },
-            verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: vOffset },
+            verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: -327660 },
             allowOverlap: true,
             behindDocument: false,
             lockAnchor: false,
