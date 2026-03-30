@@ -11,7 +11,7 @@
     .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 24px 32px; border-bottom: 1px solid #1e3a5f; display: flex; align-items: center; justify-content: space-between; }
     .header h1 { font-size: 1.4rem; color: #fff; }
     .header .cliente { color: #38bdf8; font-size: 1.1rem; font-weight: 600; }
-    .header .logo { height: 40px; opacity: 0.9; }
+    .header .logo { height: 60px; opacity: 0.9; }
     .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
 
     /* KPI Cards */
@@ -51,9 +51,20 @@
     .powered { text-align: center; color: #475569; font-size: 0.75rem; margin-top: 32px; padding-bottom: 16px; }
 
     @media (max-width: 768px) {
-      .kpi-row { grid-template-columns: repeat(2, 1fr); }
-      .charts-row { grid-template-columns: 1fr; }
+      .header { padding: 16px; flex-direction: column; gap: 12px; text-align: center; }
+      .header h1 { font-size: 1.1rem; }
+      .header .cliente { font-size: 0.95rem; }
+      .header .logo { height: 50px; }
+      .container { padding: 12px 8px; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .kpi { padding: 14px 16px; }
       .kpi .value { font-size: 1.4rem; }
+      .kpi .label { font-size: 0.7rem; }
+      .kpi .icon { font-size: 1.5rem; }
+      .charts-row { grid-template-columns: 1fr; gap: 12px; }
+      .chart-card { padding: 16px; }
+      .timeline .segment { font-size: 0.7rem; }
+      .summary-table td, .summary-table th { padding: 8px 10px; font-size: 0.85rem; }
     }
     .info-wrap { position: static; display: inline-block; }
     .info-btn { cursor: pointer; font-size: 1rem; color: #a78bfa; margin-left: 4px; vertical-align: middle; outline: none; }
@@ -65,7 +76,15 @@
     .info-wrap:focus-within .info-box { display: block; }
     .info-wrap:focus-within .info-backdrop { display: block; }
     @media (max-width: 480px) {
-      .kpi-row { grid-template-columns: 1fr; }
+      .header h1 { font-size: 0.95rem; }
+      .kpi-row { grid-template-columns: 1fr; gap: 8px; }
+      .kpi { padding: 12px 14px; }
+      .kpi .value { font-size: 1.3rem; }
+      .kpi .sub { font-size: 0.75rem; }
+      .chart-card h3 { font-size: 0.8rem; }
+      .summary-table td, .summary-table th { padding: 6px 8px; font-size: 0.8rem; }
+      .timeline { height: 44px; }
+      .timeline .segment { font-size: 0.65rem; }
     }
   </style>
 </head>
