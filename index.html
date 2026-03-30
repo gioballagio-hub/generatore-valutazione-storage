@@ -954,9 +954,16 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       ch.push(body('L\u2019intervento pu\u00f2 essere realizzato secondo la formula pi\u00f9 adatta alle Vostre esigenze:'));
       righeP('txtPropModalita').forEach(function(r) { ch.push(bullet(r, 'comm_bullets2')); });
 
-      // === 6. DETTAGLIO CALCOLI ===
-      ch.push(heading('6. Dettaglio calcoli'));
-      ch.push(body('Di seguito i dati di partenza e il dettaglio di ogni calcolo citato nel documento, per una verifica completa e trasparente.'));
+      // === CHIUSURA dopo sezione 5 ===
+      ch.push(new Paragraph({
+        spacing: { before: 300, after: 200 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: '2E75B6', space: 1 } },
+        children: [],
+      }));
+      var chiusuraText = sostituisciSegnaposto(document.getElementById('txtPropChiusura').value, vars);
+      ch.push(bodyMixed([
+        new TextRun({ text: chiusuraText, bold: true, size: 22, font: 'Calibri', color: '1A3A5C' }),
+      ]));
       ch.push(emptyLine());
 
       // Helper per celle tabella dettaglio
@@ -1051,17 +1058,6 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         ],
       }));
       ch.push(emptyLine());
-
-      // === CHIUSURA === (da textarea)
-      ch.push(new Paragraph({
-        spacing: { before: 300, after: 200 },
-        border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: '2E75B6', space: 1 } },
-        children: [],
-      }));
-      var chiusuraText = sostituisciSegnaposto(document.getElementById('txtPropChiusura').value, vars);
-      ch.push(bodyMixed([
-        new TextRun({ text: chiusuraText, bold: true, size: 22, font: 'Calibri', color: '1A3A5C' }),
-      ]));
 
       const doc = new Document({
         styles: {
