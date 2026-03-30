@@ -64,7 +64,7 @@
   <div class="header">
     <div>
       <h1>Dashboard Efficientamento Energetico con Storage allo Stato Solido</h1>
-      <div class="cliente">Azienda Cliente: <span id="headerCliente"></span></div>
+      <div class="cliente"><span id="headerCliente"></span></div>
     </div>
     <img src="logo-expofin.png" alt="Expofin" class="logo">
   </div>
@@ -148,7 +148,7 @@
     // Leggi parametri da URL
     var params = new URLSearchParams(window.location.search);
     var D = {
-      nome: params.get('nome') || 'Azienda Cliente',
+      nome: params.get('nome') || '',
       kWp: parseFloat(params.get('kWp')) || 450,
       prezzoVendita: parseFloat(params.get('pv')) || 0.09,
       costoAcquisto: parseFloat(params.get('ca')) || 0.25,
