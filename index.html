@@ -295,7 +295,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
   </div>
 
   <script>
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, LevelFormat, ImageRun, Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign, TabStopType, TabStopPosition, Header } = docx;
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, LevelFormat, ImageRun, Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign, TabStopType, TabStopPosition, Header, PageBreak } = docx;
 
     function getInputs() {
       return {
@@ -978,8 +978,11 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         });
       }
 
-      // Tabella A — Dati di partenza
-      ch.push(bodyBold('Tabella A \u2014 Dati di partenza'));
+      // === PAGINA SEPARATA: Tabella A — Dati di partenza ===
+      ch.push(new Paragraph({ children: [new PageBreak()] }));
+      ch.push(heading('Allegato \u2014 Dati di partenza'));
+      ch.push(body('Tabella riepilogativa dei dati utilizzati per i calcoli della presente proposta.'));
+      ch.push(emptyLine());
       var tAColW = [3800, 2200, 3360];
       ch.push(new Table({
         width: { size: 9360, type: WidthType.DXA },
