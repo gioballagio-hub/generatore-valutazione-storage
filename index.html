@@ -61,6 +61,15 @@
           <input type="text" id="nomeAzienda" value="MOLLIFICIO BORDIGNON Srl" placeholder="es. ROSSI SPA">
         </div>
         <div class="form-group">
+          <label for="logoCliente">Logo Cliente (opzionale)</label>
+          <input type="file" id="logoCliente" accept="image/png,image/jpeg" style="font-size:0.85rem;">
+          <div id="logoPreview" style="margin-top:6px;"></div>
+        </div>
+        <div class="form-group" style="align-items:center; justify-content:center;">
+          <label>Logo Expofin</label>
+          <img src="logo-expofin.png" alt="Expofin" style="max-height:50px; object-fit:contain;">
+        </div>
+        <div class="form-group">
           <label for="potenzaFTV">Potenza FTV (kWp)</label>
           <input type="number" id="potenzaFTV" value="450" step="1" min="1">
         </div>
@@ -235,7 +244,7 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
   </div>
 
   <script>
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, LevelFormat } = docx;
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, LevelFormat, ImageRun, Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign, TabStopType, TabStopPosition } = docx;
 
     function getInputs() {
       return {
@@ -316,6 +325,31 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       return testo.replace(/\{(\w+)\}/g, function(match, key) { return vars[key] !== undefined ? vars[key] : match; });
     }
 
+    // Logo cliente preview
+    document.getElementById('logoCliente').addEventListener('change', function(e) {
+      var preview = document.getElementById('logoPreview');
+      preview.innerHTML = '';
+      if (e.target.files && e.target.files[0]) {
+        var img = document.createElement('img');
+        img.style.maxHeight = '50px';
+        img.style.objectFit = 'contain';
+        img.src = URL.createObjectURL(e.target.files[0]);
+        preview.appendChild(img);
+      }
+    });
+
+    function readFileAsArrayBuffer(file) {
+      return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function() { resolve(new Uint8Array(reader.result)); };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    var expofinLogoData = null;
+    fetch('logo-expofin.png').then(function(r) { return r.arrayBuffer(); }).then(function(buf) { expofinLogoData = new Uint8Array(buf); });
+
     function init() {
       document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', aggiornaPreview));
       aggiornaPreview();
@@ -369,10 +403,58 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       });
     }
 
+    async function getLogoCliente() {
+      var fileInput = document.getElementById('logoCliente');
+      if (fileInput.files && fileInput.files[0]) {
+        var file = fileInput.files[0];
+        var tipo = file.name.toLowerCase().endsWith('.png') ? 'png' : 'jpg';
+        var data = await readFileAsArrayBuffer(file);
+        return { data: data, type: tipo };
+      }
+      return null;
+    }
+
+    function creaIntestazioneLoghi(logoClienteData, nomeAzienda, dataStr, noBorders) {
+      var nob = { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } };
+      var cellsChildren = [];
+
+      // Cella sinistra: logo cliente (se c'è) oppure nome azienda
+      var leftContent = [];
+      if (logoClienteData) {
+        leftContent.push(new Paragraph({ children: [
+          new ImageRun({ data: logoClienteData.data, type: logoClienteData.type, transformation: { width: 150, height: 60 }, altText: { title: nomeAzienda, description: 'Logo cliente', name: 'logo-cliente' } }),
+        ]}));
+      }
+      leftContent.push(new Paragraph({ children: [new TextRun({ text: nomeAzienda, size: 28, bold: true })] }));
+      leftContent.push(new Paragraph({ children: [new TextRun({ text: dataStr, size: 20, color: '888888' })] }));
+
+      // Cella destra: logo Expofin
+      var rightContent = [];
+      if (expofinLogoData) {
+        rightContent.push(new Paragraph({ alignment: AlignmentType.RIGHT, children: [
+          new ImageRun({ data: expofinLogoData, type: 'png', transformation: { width: 140, height: 80 }, altText: { title: 'Expofin', description: 'Logo Expofin', name: 'logo-expofin' } }),
+        ]}));
+      }
+
+      return new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        columnWidths: [5500, 3860],
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({ borders: nob, width: { size: 5500, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, children: leftContent }),
+              new TableCell({ borders: nob, width: { size: 3860, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, children: rightContent.length ? rightContent : [new Paragraph({ children: [] })] }),
+            ],
+          }),
+        ],
+      });
+    }
+
     async function generaDocumento() {
       const inp = getInputs();
       const c = calcola(inp);
       const nomeCorto = nomeBreve(inp.nomeAzienda);
+      const logoCliente = await getLogoCliente();
 
       // Mappa segnaposto
       const vars = {
@@ -418,13 +500,8 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
 
       var children = [];
 
-      // INTESTAZIONE
-      children.push(new Paragraph({
-        children: [
-          new TextRun({ text: inp.nomeAzienda, size: 32, bold: false, highlight: 'yellow' }),
-          new TextRun({ text: '                                                           ' + oggi(), size: 32 }),
-        ],
-      }));
+      // INTESTAZIONE CON LOGHI
+      children.push(creaIntestazioneLoghi(logoCliente, inp.nomeAzienda, oggi()));
       children.push(separator());
 
       // TITOLO
@@ -551,7 +628,7 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       const inp = getInputs();
       const c = calcola(inp);
       const nomeCorto = nomeBreve(inp.nomeAzienda);
-      const { Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign, PageBreak, TabStopType, TabStopPosition } = docx;
+      const logoCliente = await getLogoCliente();
 
       const border = { style: BorderStyle.SINGLE, size: 1, color: 'D0D0D0' };
       const borders = { top: border, bottom: border, left: border, right: border };
@@ -596,7 +673,11 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
 
       var ch = [];
 
-      // === INTESTAZIONE ===
+      // === LOGHI INTESTAZIONE ===
+      ch.push(creaIntestazioneLoghi(logoCliente, inp.nomeAzienda, oggi()));
+      ch.push(new Paragraph({ spacing: { after: 200 }, children: [] }));
+
+      // === TITOLO ===
       ch.push(new Paragraph({
         spacing: { after: 0 },
         children: [
