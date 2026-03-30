@@ -453,40 +453,53 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
     }
 
     function creaHeaderLoghi(logoClienteData) {
-      var nob = { top: { style: BorderStyle.NONE, size: 0 }, bottom: { style: BorderStyle.NONE, size: 0 }, left: { style: BorderStyle.NONE, size: 0 }, right: { style: BorderStyle.NONE, size: 0 } };
+      var { HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom } = docx;
+      // Dimensioni logo in EMU (stesse dell'esempio: ~3.4 x 1.8 cm)
+      var logoW = 136;
+      var logoH = 73;
+      var vOffset = -400000; // stessa altezza verticale per entrambi
 
-      var leftContent = [];
-      if (logoClienteData) {
-        leftContent.push(new Paragraph({ spacing: { after: 0 }, children: [
-          new ImageRun({ data: logoClienteData.data, type: logoClienteData.type, transformation: { width: 90, height: 36 }, altText: { title: 'Cliente', description: 'Logo cliente', name: 'logo-cliente' } }),
-        ]}));
-      } else {
-        leftContent.push(new Paragraph({ spacing: { after: 0 }, children: [] }));
+      var headerChildren = [];
+
+      // Logo Expofin — in alto a DESTRA (stessa posizione dell'esempio originale)
+      if (expofinLogoData) {
+        headerChildren.push(new ImageRun({
+          data: expofinLogoData,
+          type: 'png',
+          transformation: { width: logoW, height: logoH },
+          floating: {
+            horizontalPosition: { relative: HorizontalPositionRelativeFrom.COLUMN, offset: 5194300 },
+            verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: vOffset },
+            allowOverlap: true,
+            behindDocument: false,
+            lockAnchor: false,
+            layoutInCell: true,
+          },
+          altText: { title: 'Expofin', description: 'Logo Expofin', name: 'logo-expofin' },
+        }));
       }
 
-      var rightContent = [];
-      if (expofinLogoData) {
-        rightContent.push(new Paragraph({ spacing: { after: 0 }, alignment: AlignmentType.RIGHT, children: [
-          new ImageRun({ data: expofinLogoData, type: 'png', transformation: { width: 80, height: 46 }, altText: { title: 'Expofin', description: 'Logo Expofin', name: 'logo-expofin' } }),
-        ]}));
-      } else {
-        rightContent.push(new Paragraph({ spacing: { after: 0 }, children: [] }));
+      // Logo cliente — in alto a SINISTRA, perfettamente allineato orizzontalmente
+      if (logoClienteData) {
+        headerChildren.push(new ImageRun({
+          data: logoClienteData.data,
+          type: logoClienteData.type,
+          transformation: { width: logoW, height: logoH },
+          floating: {
+            horizontalPosition: { relative: HorizontalPositionRelativeFrom.COLUMN, offset: 0 },
+            verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: vOffset },
+            allowOverlap: true,
+            behindDocument: false,
+            lockAnchor: false,
+            layoutInCell: true,
+          },
+          altText: { title: 'Cliente', description: 'Logo cliente', name: 'logo-cliente' },
+        }));
       }
 
       return new Header({
         children: [
-          new Table({
-            width: { size: 9360, type: WidthType.DXA },
-            columnWidths: [5500, 3860],
-            rows: [
-              new TableRow({
-                children: [
-                  new TableCell({ borders: nob, width: { size: 5500, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: leftContent }),
-                  new TableCell({ borders: nob, width: { size: 3860, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: rightContent }),
-                ],
-              }),
-            ],
-          }),
+          new Paragraph({ children: headerChildren }),
         ],
       });
     }
