@@ -351,46 +351,38 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       });
     }
 
-    // Cerca logo dal sito del cliente
+    // Cerca logo dal sito del cliente via Clearbit (fetch con CORS)
     async function cercaLogoCliente() {
       var sito = document.getElementById('sitoCliente').value.trim();
       if (!sito) { alert('Inserisci il sito web del cliente'); return; }
       var dominio = sito.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
       var preview = document.getElementById('logoPreview');
-      preview.innerHTML = '<span style="font-size:0.8rem;color:#888;">Cercando logo...</span>';
+      preview.innerHTML = '<span style="font-size:0.8rem;color:#888;">Cercando logo per ' + dominio + '...</span>';
 
-      // Prova Clearbit Logo API (alta qualità)
-      var urls = [
-        'https://logo.clearbit.com/' + dominio,
-        'https://www.google.com/s2/favicons?domain=' + dominio + '&sz=128',
-      ];
-
-      for (var i = 0; i < urls.length; i++) {
-        try {
-          var resp = await fetch(urls[i]);
-          if (resp.ok) {
-            var blob = await resp.blob();
-            if (blob.size > 500) { // ignora icone troppo piccole
-              var file = new File([blob], 'logo-cliente.png', { type: blob.type });
-              var dt = new DataTransfer();
-              dt.items.add(file);
-              document.getElementById('logoCliente').files = dt.files;
-              var img = document.createElement('img');
-              img.style.maxHeight = '60px';
-              img.style.objectFit = 'contain';
-              img.src = URL.createObjectURL(blob);
-              preview.innerHTML = '';
-              preview.appendChild(img);
-              var nota = document.createElement('span');
-              nota.style.cssText = 'font-size:0.75rem;color:#2d7a2d;margin-left:8px;';
-              nota.textContent = 'Logo trovato da ' + dominio;
-              preview.appendChild(nota);
-              return;
-            }
+      try {
+        var resp = await fetch('https://logo.clearbit.com/' + dominio);
+        if (resp.ok) {
+          var blob = await resp.blob();
+          if (blob.size > 500 && blob.type.startsWith('image/')) {
+            var file = new File([blob], 'logo-cliente.png', { type: blob.type });
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            document.getElementById('logoCliente').files = dt.files;
+            var img = document.createElement('img');
+            img.style.maxHeight = '60px';
+            img.style.objectFit = 'contain';
+            img.src = URL.createObjectURL(blob);
+            preview.innerHTML = '';
+            preview.appendChild(img);
+            var nota = document.createElement('span');
+            nota.style.cssText = 'font-size:0.75rem;color:#2d7a2d;margin-left:8px;';
+            nota.textContent = 'Logo trovato!';
+            preview.appendChild(nota);
+            return;
           }
-        } catch(e) { /* continua con il prossimo URL */ }
-      }
-      preview.innerHTML = '<span style="font-size:0.8rem;color:#c00;">Logo non trovato. Caricalo manualmente.</span>';
+        }
+      } catch(e) { /* Clearbit non disponibile */ }
+      preview.innerHTML = '<span style="font-size:0.8rem;color:#c00;">Logo non trovato per "' + dominio + '". Caricalo manualmente con il pulsante sopra.</span>';
     }
 
     var expofinLogoData = null;
@@ -460,39 +452,36 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       return null;
     }
 
-    function creaHeaderLoghi(logoClienteData) {
-      var nob = { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } };
+    function creaLoghiBody(logoClienteData) {
+      var nob = { top: { style: BorderStyle.NONE, size: 0 }, bottom: { style: BorderStyle.NONE, size: 0 }, left: { style: BorderStyle.NONE, size: 0 }, right: { style: BorderStyle.NONE, size: 0 } };
 
       var leftContent = [];
       if (logoClienteData) {
-        leftContent.push(new Paragraph({ children: [
+        leftContent.push(new Paragraph({ spacing: { after: 0 }, children: [
           new ImageRun({ data: logoClienteData.data, type: logoClienteData.type, transformation: { width: 120, height: 48 }, altText: { title: 'Cliente', description: 'Logo cliente', name: 'logo-cliente' } }),
         ]}));
       } else {
-        leftContent.push(new Paragraph({ children: [] }));
+        leftContent.push(new Paragraph({ spacing: { after: 0 }, children: [] }));
       }
 
       var rightContent = [];
       if (expofinLogoData) {
-        rightContent.push(new Paragraph({ alignment: AlignmentType.RIGHT, children: [
-          new ImageRun({ data: expofinLogoData, type: 'png', transformation: { width: 110, height: 63 }, altText: { title: 'Expofin', description: 'Logo Expofin', name: 'logo-expofin' } }),
+        rightContent.push(new Paragraph({ spacing: { after: 0 }, alignment: AlignmentType.RIGHT, children: [
+          new ImageRun({ data: expofinLogoData, type: 'png', transformation: { width: 120, height: 69 }, altText: { title: 'Expofin', description: 'Logo Expofin', name: 'logo-expofin' } }),
         ]}));
       } else {
-        rightContent.push(new Paragraph({ children: [] }));
+        rightContent.push(new Paragraph({ spacing: { after: 0 }, children: [] }));
       }
 
-      return new Header({
-        children: [
-          new Table({
-            width: { size: 9360, type: WidthType.DXA },
-            columnWidths: [5500, 3860],
-            rows: [
-              new TableRow({
-                children: [
-                  new TableCell({ borders: nob, width: { size: 5500, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, children: leftContent }),
-                  new TableCell({ borders: nob, width: { size: 3860, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, children: rightContent }),
-                ],
-              }),
+      return new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        columnWidths: [5500, 3860],
+        rows: [
+          new TableRow({
+            cantSplit: true,
+            children: [
+              new TableCell({ borders: nob, width: { size: 5500, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: leftContent }),
+              new TableCell({ borders: nob, width: { size: 3860, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, margins: { top: 0, bottom: 0, left: 0, right: 0 }, children: rightContent }),
             ],
           }),
         ],
@@ -549,8 +538,8 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
 
       var children = [];
 
-      // Header Word con loghi
-      var wordHeader = creaHeaderLoghi(logoCliente);
+      // LOGHI
+      children.push(creaLoghiBody(logoCliente));
 
       // INTESTAZIONE
       children.push(new Paragraph({
@@ -666,8 +655,8 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
           ],
         },
         sections: [{
-          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1800, right: 1440, bottom: 1440, left: 1440 } } },
-          headers: { default: wordHeader },
+          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+
           children: children,
         }],
       });
@@ -711,6 +700,7 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
 
       function kvRow(label, value, highlight) {
         return new TableRow({
+          cantSplit: true,
           children: [
             new TableCell({
               borders: noBorders,
@@ -731,8 +721,8 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
 
       var ch = [];
 
-      // Header Word con loghi
-      var wordHeader = creaHeaderLoghi(logoCliente);
+      // === LOGHI ===
+      ch.push(creaLoghiBody(logoCliente));
 
       // === TITOLO ===
       ch.push(new Paragraph({
@@ -856,8 +846,8 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
           ],
         },
         sections: [{
-          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1600, right: 1200, bottom: 1200, left: 1200 } } },
-          headers: { default: wordHeader },
+          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1200, right: 1200, bottom: 1200, left: 1200 } } },
+
           children: ch,
         }],
       });
