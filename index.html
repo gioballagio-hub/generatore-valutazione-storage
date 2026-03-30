@@ -927,10 +927,8 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       TP('txtPropWeekend').forEach(function(r) { ch.push(body(r)); });
 
       // === 3. I NUMERI ===
-      ch.push(new Paragraph({ children: [new PageBreak()] }));
-      ch.push(heading('3. Il ritorno economico'));
-      ch.push(body('Ecco i numeri della Vostra convenienza:'));
-      ch.push(emptyLine());
+      ch.push(new Paragraph({ keepNext: true, spacing: { before: 300, after: 150 }, children: [new TextRun({ text: '3. Il ritorno economico', bold: true, size: 28, color: '1A3A5C', font: 'Calibri' })] }));
+      ch.push(new Paragraph({ keepNext: true, spacing: { after: 120, line: 276 }, children: [new TextRun({ text: 'Ecco i numeri della Vostra convenienza:', size: 22, font: 'Calibri' })] }));
 
       // Pedice helper
       function sup(n) { return new TextRun({ text: ' ' + n, superScript: true, size: 18, color: '2E75B6', font: 'Calibri' }); }
