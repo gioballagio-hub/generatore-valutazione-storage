@@ -180,7 +180,7 @@
         <canvas id="chartRisparmio"></canvas>
       </div>
       <div class="chart-card">
-        <h3>Utilizzo energia FTV</h3>
+        <h3>Utilizzo energia fotovoltaico</h3>
         <canvas id="chartUtilizzo"></canvas>
       </div>
     </div>
@@ -459,7 +459,7 @@
       var tbody = document.getElementById('summaryBody');
       tbody.innerHTML = '';
       var rows = [
-        ['Impianto FTV', fmt(D.kWp) + ' kWp'],
+        ['Impianto fotovoltaico', fmt(D.kWp) + ' kWp'],
         ['Produzione annua', fmt(produzioneAnnua) + ' kWh'],
         nStor > 1 ? ['N. Storage', nStor + ' x ' + fmt(D.capacitaStorage) + ' kWh = ' + fmt(capTotale) + ' kWh totali'] : ['Capacit\u00e0 storage', fmt(capTotale) + ' kWh'],
         ['Prezzo vendita rete', D.prezzoVendita.toFixed(2).replace('.',',') + ' \u20AC/kWh'],
