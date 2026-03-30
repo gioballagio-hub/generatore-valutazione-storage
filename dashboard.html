@@ -178,7 +178,7 @@
     function fmt(n) { return n.toLocaleString('it-IT'); }
 
     // Header
-    document.getElementById('headerCliente').textContent = D.nome;
+    document.getElementById('headerCliente').textContent = D.nome || 'Parametri mancanti - apri la dashboard dal preventivatore';
     document.title = 'Dashboard - ' + D.nome;
 
     // KPI
