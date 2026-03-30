@@ -556,7 +556,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
 
     function getDashboardUrl() {
       var inp = getInputs();
-      var base = window.location.href.split('?')[0].replace(/\/[^\/]*\.html$/, '') .replace(/\/$/, '') + '/dashboard.html';
+      var base = window.location.href.split('?')[0].replace(/\/[^\/]*\.html$/, '').replace(/\/$/, '') + '/dashboard';
       var p = new URLSearchParams();
       p.set('nome', inp.nomeAzienda);
       p.set('kWp', inp.kWp);
