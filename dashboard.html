@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Energetica - Expofin</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 24px 32px; border-bottom: 1px solid #1e3a5f; display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 1.4rem; color: #fff; }
+    .header .cliente { color: #38bdf8; font-size: 1.1rem; font-weight: 600; }
+    .header .logo { height: 40px; opacity: 0.9; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+    /* KPI Cards */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .kpi { background: linear-gradient(135deg, #1e293b, #1a2744); border-radius: 16px; padding: 20px 24px; border: 1px solid #2a3f5f; position: relative; overflow: hidden; }
+    .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi.green::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .kpi.blue::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+    .kpi.amber::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .kpi.purple::before { background: linear-gradient(90deg, #a855f7, #7c3aed); }
+    .kpi .label { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .kpi .value { font-size: 1.8rem; font-weight: 800; color: #fff; }
+    .kpi .sub { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+    .kpi .icon { position: absolute; top: 16px; right: 20px; font-size: 2rem; opacity: 0.15; }
+
+    /* Chart containers */
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .chart-card { background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid #2a3f5f; }
+    .chart-card h3 { font-size: 0.95rem; color: #94a3b8; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .chart-card canvas { max-height: 280px; }
+
+    .full-width { grid-column: 1 / -1; }
+
+    /* Timeline payback */
+    .timeline { display: flex; align-items: stretch; gap: 0; margin: 16px 0; height: 56px; border-radius: 12px; overflow: hidden; }
+    .timeline .segment { display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff; position: relative; }
+    .timeline .payback { background: linear-gradient(90deg, #dc2626, #f59e0b); }
+    .timeline .profit { background: linear-gradient(90deg, #16a34a, #22c55e); }
+
+    /* Summary table */
+    .summary-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .summary-table th { text-align: left; padding: 10px 14px; font-size: 0.8rem; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #2a3f5f; }
+    .summary-table td { padding: 10px 14px; border-bottom: 1px solid #1e3a5f; font-size: 0.95rem; }
+    .summary-table td.val { text-align: right; font-weight: 700; color: #38bdf8; }
+    .summary-table td.green { color: #22c55e; }
+
+    .powered { text-align: center; color: #475569; font-size: 0.75rem; margin-top: 32px; padding-bottom: 16px; }
+
+    @media (max-width: 768px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .charts-row { grid-template-columns: 1fr; }
+      .kpi .value { font-size: 1.4rem; }
+    }
+    @media (max-width: 480px) {
+      .kpi-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Dashboard Efficientamento Energetico</h1>
+      <div class="cliente" id="headerCliente"></div>
+    </div>
+    <img src="logo-expofin.png" alt="Expofin" class="logo">
+  </div>
+
+  <div class="container">
+    <!-- KPI -->
+    <div class="kpi-row">
+      <div class="kpi green">
+        <div class="icon">&#9889;</div>
+        <div class="label">Risparmio annuo</div>
+        <div class="value" id="kpiRisparmio">-</div>
+        <div class="sub" id="kpiRisparmioSub"></div>
+      </div>
+      <div class="kpi amber">
+        <div class="icon">&#9200;</div>
+        <div class="label">Payback</div>
+        <div class="value" id="kpiPayback">-</div>
+        <div class="sub">Tempo di ritorno investimento</div>
+      </div>
+      <div class="kpi blue">
+        <div class="icon">&#9883;</div>
+        <div class="label">ROI a 10 anni</div>
+        <div class="value" id="kpiROI">-</div>
+        <div class="sub" id="kpiROISub"></div>
+      </div>
+      <div class="kpi purple">
+        <div class="icon">&#127793;</div>
+        <div class="label">CO2 evitata/anno</div>
+        <div class="value" id="kpiCO2">-</div>
+        <div class="sub">Equivalente a piantare alberi</div>
+      </div>
+    </div>
+
+    <!-- Timeline payback -->
+    <div class="chart-card full-width" style="grid-column:1/-1;">
+      <h3>Timeline investimento vs guadagno (10 anni)</h3>
+      <div class="timeline" id="timeline"></div>
+      <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.8rem; color:#64748b;">
+        <span>Anno 0</span>
+        <span id="timelinePayback"></span>
+        <span>Anno 10</span>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>Composizione risparmio annuo</h3>
+        <canvas id="chartRisparmio"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Flusso di cassa cumulativo</h3>
+        <canvas id="chartCashflow"></canvas>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>Confronto costi energia</h3>
+        <canvas id="chartCosti"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Utilizzo energia FTV</h3>
+        <canvas id="chartUtilizzo"></canvas>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="chart-card">
+      <h3>Riepilogo dati</h3>
+      <table class="summary-table">
+        <thead><tr><th>Parametro</th><th style="text-align:right">Valore</th></tr></thead>
+        <tbody id="summaryBody"></tbody>
+      </table>
+    </div>
+
+    <div class="powered">Powered by Expofin - Enjoy Future</div>
+  </div>
+
+  <script>
+    // Leggi parametri da URL
+    var params = new URLSearchParams(window.location.search);
+    var D = {
+      nome: params.get('nome') || 'Azienda Cliente',
+      kWp: parseFloat(params.get('kWp')) || 450,
+      prezzoVendita: parseFloat(params.get('pv')) || 0.09,
+      costoAcquisto: parseFloat(params.get('ca')) || 0.25,
+      orePausa: parseFloat(params.get('op')) || 1.5,
+      capacitaStorage: parseFloat(params.get('cs')) || 261,
+      costoStorage: parseFloat(params.get('costo')) || 70470,
+      oreLuce: parseFloat(params.get('ol')) || 7,
+    };
+
+    // Calcoli
+    var produzioneAnnua = D.kWp * 1200;
+    var mediaGG = Math.round(produzioneAnnua / 365);
+    var kWhPerOra = Math.round(mediaGG / D.oreLuce);
+    var energiaImmessa = Math.round(produzioneAnnua * 0.25);
+    var delta = D.costoAcquisto - D.prezzoVendita;
+    var kWhCalcolati = Math.round(kWhPerOra * D.orePausa);
+    var kWhAcc = Math.min(kWhCalcolati, D.capacitaStorage);
+    var rispA = Math.floor(kWhAcc * delta * 5 * 52);
+    var rispB = Math.floor(D.capacitaStorage * delta * 52);
+    var rispTot = rispA + rispB;
+    var costoEff = Math.floor(D.costoStorage * (1 - 0.432));
+    var payback = rispTot > 0 ? costoEff / rispTot : 0;
+    var roi10 = rispTot * 10 - costoEff;
+    var co2 = Math.round((kWhAcc * 5 * 52 + D.capacitaStorage * 52) * 0.000233 * 1000) / 1000; // tonnellate CO2
+    var alberi = Math.round(co2 / 0.022); // ~22 kg CO2/albero/anno
+
+    function fmt(n) { return n.toLocaleString('it-IT'); }
+
+    // Header
+    document.getElementById('headerCliente').textContent = D.nome;
+    document.title = 'Dashboard - ' + D.nome;
+
+    // KPI
+    document.getElementById('kpiRisparmio').textContent = fmt(rispTot) + ' \u20AC';
+    document.getElementById('kpiRisparmioSub').textContent = fmt(rispA) + ' \u20AC feriale + ' + fmt(rispB) + ' \u20AC weekend';
+    document.getElementById('kpiPayback').textContent = payback.toFixed(1).replace('.', ',') + ' anni';
+    document.getElementById('kpiROI').textContent = '+' + fmt(roi10) + ' \u20AC';
+    document.getElementById('kpiROISub').textContent = 'Guadagno netto in 10 anni';
+    document.getElementById('kpiCO2').textContent = co2.toFixed(1).replace('.', ',') + ' t';
+    document.getElementById('kpiCO2').parentElement.querySelector('.sub').textContent = 'Equivalente a ' + fmt(alberi) + ' alberi/anno';
+
+    // Timeline
+    var paybackPct = Math.min(payback / 10 * 100, 100);
+    var profitPct = 100 - paybackPct;
+    document.getElementById('timeline').innerHTML =
+      '<div class="segment payback" style="width:' + paybackPct + '%;"><span>' + payback.toFixed(1).replace('.', ',') + ' anni - Rientro</span></div>' +
+      '<div class="segment profit" style="width:' + profitPct + '%;"><span>' + (10 - payback).toFixed(1).replace('.', ',') + ' anni - Guadagno puro</span></div>';
+    document.getElementById('timelinePayback').textContent = 'Payback: anno ' + payback.toFixed(1).replace('.', ',');
+
+    // Chart 1: Composizione risparmio (doughnut)
+    new Chart(document.getElementById('chartRisparmio'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Accumulo feriale (A)', 'Accumulo weekend (B)'],
+        datasets: [{
+          data: [rispA, rispB],
+          backgroundColor: ['#3b82f6', '#22c55e'],
+          borderWidth: 0,
+          borderRadius: 4,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 13 }, padding: 16 } },
+          tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + fmt(ctx.raw) + ' \u20AC/anno'; } } },
+        },
+      },
+    });
+
+    // Chart 2: Cashflow cumulativo (line)
+    var cashflowData = [];
+    for (var y = 0; y <= 10; y++) {
+      cashflowData.push(Math.round(-costoEff + rispTot * y));
+    }
+    new Chart(document.getElementById('chartCashflow'), {
+      type: 'line',
+      data: {
+        labels: ['Anno 0','1','2','3','4','5','6','7','8','9','10'],
+        datasets: [{
+          label: 'Flusso cumulativo',
+          data: cashflowData,
+          borderColor: '#22c55e',
+          backgroundColor: function(ctx) {
+            var g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 280);
+            g.addColorStop(0, 'rgba(34,197,94,0.3)');
+            g.addColorStop(1, 'rgba(34,197,94,0)');
+            return g;
+          },
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: function(ctx) { return ctx.raw >= 0 ? '#22c55e' : '#ef4444'; },
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(ctx) { return fmt(ctx.raw) + ' \u20AC'; } } },
+        },
+        scales: {
+          x: { grid: { color: '#1e3a5f' }, ticks: { color: '#64748b' } },
+          y: {
+            grid: { color: '#1e3a5f' },
+            ticks: { color: '#64748b', callback: function(v) { return fmt(v) + ' \u20AC'; } },
+          },
+        },
+      },
+    });
+
+    // Chart 3: Confronto costi (bar)
+    var costoSenza = Math.round(energiaImmessa * D.costoAcquisto);
+    var ricavoVendita = Math.round(energiaImmessa * D.prezzoVendita);
+    var costoConStorage = Math.round(energiaImmessa * D.costoAcquisto - rispTot);
+    new Chart(document.getElementById('chartCosti'), {
+      type: 'bar',
+      data: {
+        labels: ['Senza storage', 'Con storage'],
+        datasets: [{
+          label: 'Costo energia non autoconsumata',
+          data: [Math.round(energiaImmessa * D.prezzoVendita), Math.round(energiaImmessa * D.prezzoVendita) + rispTot],
+          backgroundColor: ['#ef4444', '#22c55e'],
+          borderWidth: 0,
+          borderRadius: 8,
+          barThickness: 60,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(ctx) { return fmt(ctx.raw) + ' \u20AC/anno'; } } },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 13 } } },
+          y: { grid: { color: '#1e3a5f' }, ticks: { color: '#64748b', callback: function(v) { return fmt(v) + ' \u20AC'; } } },
+        },
+      },
+    });
+
+    // Chart 4: Utilizzo energia (doughnut)
+    var autoconsumo = produzioneAnnua * 0.75;
+    var recuperoStorage = kWhAcc * 5 * 52 + D.capacitaStorage * 52;
+    var ancoraImmessa = energiaImmessa - recuperoStorage;
+    if (ancoraImmessa < 0) ancoraImmessa = 0;
+    new Chart(document.getElementById('chartUtilizzo'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Autoconsumo diretto', 'Recuperato da storage', 'Ancora immesso in rete'],
+        datasets: [{
+          data: [Math.round(autoconsumo), Math.round(recuperoStorage), Math.round(ancoraImmessa)],
+          backgroundColor: ['#3b82f6', '#22c55e', '#64748b'],
+          borderWidth: 0,
+          borderRadius: 4,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 }, padding: 12 } },
+          tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + fmt(ctx.raw) + ' kWh/anno'; } } },
+        },
+      },
+    });
+
+    // Summary table
+    var rows = [
+      ['Impianto FTV', fmt(D.kWp) + ' kWp'],
+      ['Produzione annua', fmt(produzioneAnnua) + ' kWh'],
+      ['Capacit\u00e0 storage', fmt(D.capacitaStorage) + ' kWh'],
+      ['Prezzo vendita rete', D.prezzoVendita.toFixed(2).replace('.',',') + ' \u20AC/kWh'],
+      ['Costo acquisto rete', D.costoAcquisto.toFixed(2).replace('.',',') + ' \u20AC/kWh'],
+      ['Delta prezzo', delta.toFixed(2).replace('.',',') + ' \u20AC/kWh'],
+      ['Risparmio feriale (A)', fmt(rispA) + ' \u20AC/anno', true],
+      ['Risparmio weekend (B)', fmt(rispB) + ' \u20AC/anno', true],
+      ['Risparmio totale', fmt(rispTot) + ' \u20AC/anno', true],
+      ['Costo storage (lordo)', fmt(D.costoStorage) + ' \u20AC'],
+      ['Costo effettivo (netto iper-amm.)', fmt(costoEff) + ' \u20AC'],
+      ['Payback', payback.toFixed(2).replace('.',',') + ' anni'],
+      ['ROI 10 anni', '+' + fmt(roi10) + ' \u20AC', true],
+    ];
+    var tbody = document.getElementById('summaryBody');
+    rows.forEach(function(r) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + r[0] + '</td><td class="val' + (r[2] ? ' green' : '') + '">' + r[1] + '</td>';
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>

@@ -287,6 +287,11 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       <button class="btn" onclick="generaDocumento()">Documento Tecnico<small>Versione con calcoli dettagliati</small></button>
       <button class="btn btn-green" onclick="generaPropostaCommerciale()">Proposta Commerciale<small>Versione persuasiva per il cliente</small></button>
     </div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn" style="background:#7c3aed;" onclick="apriDashboard()">Dashboard Cliente<small>Grafici interattivi e KPI da condividere</small></button>
+      <button class="btn" style="background:#475569;" onclick="copiaLinkDashboard()">Copia Link Dashboard<small>Link condivisibile con il cliente</small></button>
+    </div>
+    <div id="linkCopiato" style="display:none; text-align:center; color:#22c55e; font-size:0.85rem; margin-top:8px; font-weight:600;">Link copiato negli appunti!</div>
   </div>
 
   <script>
@@ -549,6 +554,34 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       });
     }
 
+    function getDashboardUrl() {
+      var inp = getInputs();
+      var base = window.location.href.replace(/\/[^\/]*$/, '/dashboard.html');
+      var p = new URLSearchParams();
+      p.set('nome', inp.nomeAzienda);
+      p.set('kWp', inp.kWp);
+      p.set('pv', inp.prezzoVendita);
+      p.set('ca', inp.costoAcquisto);
+      p.set('op', inp.orePausa);
+      p.set('cs', inp.capacitaStorage);
+      p.set('costo', inp.costoStorage);
+      p.set('ol', inp.oreLuce);
+      return base + '?' + p.toString();
+    }
+
+    function apriDashboard() {
+      window.open(getDashboardUrl(), '_blank');
+    }
+
+    function copiaLinkDashboard() {
+      var url = getDashboardUrl();
+      navigator.clipboard.writeText(url).then(function() {
+        var el = document.getElementById('linkCopiato');
+        el.style.display = 'block';
+        setTimeout(function() { el.style.display = 'none'; }, 3000);
+      });
+    }
+
     async function generaDocumento() {
       const inp = getInputs();
       const c = calcola(inp);
@@ -640,6 +673,8 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       if (tagliaRighe.length >= 3) {
         children.push(new Paragraph({ children: [new TextRun({ text: tagliaRighe[2] })] }));
       }
+
+      children.push(separator());
 
       // 4 - CALCOLO kWh
       children.push(new Paragraph({ children: [new TextRun({ text: '4- Calcolo dei kWh accumulabili nello Storage', bold: true })] }));
