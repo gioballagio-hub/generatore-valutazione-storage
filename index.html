@@ -82,6 +82,10 @@
           </select>
         </div>
         <div class="form-group">
+          <label for="nStorage">N. Storage</label>
+          <input type="number" id="nStorage" value="1" step="1" min="1" max="20">
+        </div>
+        <div class="form-group">
           <label for="prezzoVendita">Prezzo vendita energia in rete (&euro;/kWh)</label>
           <input type="number" id="prezzoVendita" value="0.09" step="0.01" min="0">
         </div>
@@ -305,6 +309,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         costoAcquisto: parseFloat(document.getElementById('costoAcquisto').value) || 0,
         orePausa: parseFloat(document.getElementById('orePausa').value) || 0,
         capacitaStorage: parseFloat(document.getElementById('capacitaStorage').value) || 0,
+        nStorage: parseInt(document.getElementById('nStorage').value) || 1,
         oreLuce: parseFloat(document.getElementById('oreLuce').value) || 7,
         costoStorage: parseFloat(document.getElementById('costoStorage').value) || 0,
       };
@@ -316,15 +321,18 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       const kWhPerOra = Math.round(mediaGiornaliera / inp.oreLuce);
       const energiaImmessa = Math.round(produzioneAnnua * 0.25);
       const delta = inp.costoAcquisto - inp.prezzoVendita;
+      const n = inp.nStorage || 1;
+      const capacitaTotale = inp.capacitaStorage * n;
+      const costoStorageTotale = inp.costoStorage * n;
       const kWhCalcolati = Math.round(kWhPerOra * inp.orePausa);
-      const superaCap = kWhCalcolati > inp.capacitaStorage;
-      const kWhAccPomeriggio = superaCap ? inp.capacitaStorage : kWhCalcolati;
+      const superaCap = kWhCalcolati > capacitaTotale;
+      const kWhAccPomeriggio = superaCap ? capacitaTotale : kWhCalcolati;
       const risparmioA = Math.floor(kWhAccPomeriggio * delta * 5 * 52);
-      const risparmioB = Math.floor(inp.capacitaStorage * delta * 52);
+      const risparmioB = Math.floor(capacitaTotale * delta * 52);
       const risparmioTotale = risparmioA + risparmioB;
-      const costoEffettivo = Math.floor(inp.costoStorage * (1 - 0.432));
+      const costoEffettivo = Math.floor(costoStorageTotale * (1 - 0.432));
       const payback = risparmioTotale > 0 ? (costoEffettivo / risparmioTotale) : 0;
-      return { produzioneAnnua, mediaGiornaliera, kWhPerOra, energiaImmessa, delta, kWhCalcolati, kWhAccPomeriggio, superaCap, risparmioA, risparmioB, risparmioTotale, costoEffettivo, payback };
+      return { produzioneAnnua, mediaGiornaliera, kWhPerOra, energiaImmessa, delta, kWhCalcolati, kWhAccPomeriggio, superaCap, risparmioA, risparmioB, risparmioTotale, costoEffettivo, payback, capacitaTotale, costoStorageTotale, nStorage: n };
     }
 
     function fmtNum(n) { return n.toLocaleString('it-IT'); }
@@ -564,6 +572,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       p.set('ca', inp.costoAcquisto);
       p.set('op', inp.orePausa);
       p.set('cs', inp.capacitaStorage);
+      p.set('ns', inp.nStorage);
       p.set('costo', inp.costoStorage);
       p.set('ol', inp.oreLuce);
       return base + '?' + p.toString();
@@ -600,8 +609,11 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         prezzoVendita: inp.prezzoVendita.toFixed(2).replace('.', ','),
         costoAcquisto: inp.costoAcquisto.toFixed(2).replace('.', ','),
         delta: c.delta.toFixed(2).replace('.', ','),
-        capacitaStorage: fmtNum(inp.capacitaStorage),
-        costoStorage: fmtNum(inp.costoStorage),
+        capacitaStorage: fmtNum(c.capacitaTotale),
+        capacitaUnitaria: fmtNum(inp.capacitaStorage),
+        nStorage: c.nStorage,
+        costoStorage: fmtNum(c.costoStorageTotale),
+        costoStorageUnitario: fmtNum(inp.costoStorage),
         costoEffettivo: fmtNum(c.costoEffettivo),
         kWhPerOra: fmtNum(c.kWhPerOra),
         kWhCalcolati: fmtNum(c.kWhCalcolati),
@@ -782,8 +794,11 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         prezzoVendita: inp.prezzoVendita.toFixed(2).replace('.', ','),
         costoAcquisto: inp.costoAcquisto.toFixed(2).replace('.', ','),
         delta: c.delta.toFixed(2).replace('.', ','),
-        capacitaStorage: fmtNum(inp.capacitaStorage),
-        costoStorage: fmtNum(inp.costoStorage), costoEffettivo: fmtNum(c.costoEffettivo),
+        capacitaStorage: fmtNum(c.capacitaTotale),
+        capacitaUnitaria: fmtNum(inp.capacitaStorage),
+        nStorage: c.nStorage,
+        costoStorage: fmtNum(c.costoStorageTotale),
+        costoStorageUnitario: fmtNum(inp.costoStorage), costoEffettivo: fmtNum(c.costoEffettivo),
         kWhPerOra: fmtNum(c.kWhPerOra), kWhCalcolati: fmtNum(c.kWhCalcolati),
         kWhAccPomeriggio: fmtNum(c.kWhAccPomeriggio), orePausaLabel: orePausaLabel(inp.orePausa),
         risparmioA: fmtNum(c.risparmioA), risparmioB: fmtNum(c.risparmioB),

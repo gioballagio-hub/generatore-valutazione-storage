@@ -213,6 +213,7 @@
       costoAcquisto: parseFloat(params.get('ca')) || 0.25,
       orePausa: parseFloat(params.get('op')) || 1.5,
       capacitaStorage: parseFloat(params.get('cs')) || 261,
+      nStorage: parseInt(params.get('ns')) || 1,
       costoStorage: parseFloat(params.get('costo')) || 70470,
       oreLuce: parseFloat(params.get('ol')) || 7,
     };
@@ -224,11 +225,14 @@
     var mediaGG = Math.round(produzioneAnnua / 365);
     var kWhPerOra = Math.round(mediaGG / D.oreLuce);
     var energiaImmessa = Math.round(produzioneAnnua * 0.25);
+    var nStor = D.nStorage || 1;
+    var capTotale = D.capacitaStorage * nStor;
+    var costoStorTotale = D.costoStorage * nStor;
     var deltaBase = D.costoAcquisto - D.prezzoVendita;
     var kWhCalcolati = Math.round(kWhPerOra * D.orePausa);
-    var kWhAcc = Math.min(kWhCalcolati, D.capacitaStorage);
-    var costoEff = Math.floor(D.costoStorage * (1 - 0.432));
-    var kWhRecuperati = kWhAcc * 5 * 52 + D.capacitaStorage * 52;
+    var kWhAcc = Math.min(kWhCalcolati, capTotale);
+    var costoEff = Math.floor(costoStorTotale * (1 - 0.432));
+    var kWhRecuperati = kWhAcc * 5 * 52 + capTotale * 52;
     var co2 = Math.round(kWhRecuperati * 0.000233 * 1000) / 1000;
     var alberi = Math.round(co2 / 0.022);
 
@@ -248,7 +252,7 @@
 
       // Risparmio anno 1 (base, senza aumento)
       var rispA_base = Math.floor(kWhAcc * deltaBase * 5 * 52);
-      var rispB_base = Math.floor(D.capacitaStorage * deltaBase * 52);
+      var rispB_base = Math.floor(capTotale * deltaBase * 52);
       var rispTot_base = rispA_base + rispB_base;
 
       // Calcolo anno per anno
@@ -262,7 +266,7 @@
       for (var y = 1; y <= 10; y++) {
         var delta_y = deltaBase * Math.pow(1 + aum, y - 1);
         var rispA_y = Math.floor(kWhAcc * delta_y * 5 * 52);
-        var rispB_y = Math.floor(D.capacitaStorage * delta_y * 52);
+        var rispB_y = Math.floor(capTotale * delta_y * 52);
         var rispTot_y = rispA_y + rispB_y;
         risparmiAnno.push(rispTot_y);
         cumulativo += rispTot_y;
@@ -427,7 +431,7 @@
       var rows = [
         ['Impianto FTV', fmt(D.kWp) + ' kWp'],
         ['Produzione annua', fmt(produzioneAnnua) + ' kWh'],
-        ['Capacit\u00e0 storage', fmt(D.capacitaStorage) + ' kWh'],
+        nStor > 1 ? ['N. Storage', nStor + ' x ' + fmt(D.capacitaStorage) + ' kWh = ' + fmt(capTotale) + ' kWh totali'] : ['Capacit\u00e0 storage', fmt(capTotale) + ' kWh'],
         ['Prezzo vendita rete', D.prezzoVendita.toFixed(2).replace('.',',') + ' \u20AC/kWh'],
         ['Costo acquisto rete', D.costoAcquisto.toFixed(2).replace('.',',') + ' \u20AC/kWh'],
         ['Aumento annuo energia', aumentoPct.toFixed(1).replace('.',',') + '%'],
