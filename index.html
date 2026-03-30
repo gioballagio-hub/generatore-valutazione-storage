@@ -651,7 +651,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         spacing: { after: 0 }, indent: { left: 720 },
         children: [
           new TextRun({ text: 'L\u2019energia eccedente prodotta nel pomeriggio carichera\u0300 lo Storage di: ' + vars.kWhPerOra + ' kWh x ' }),
-          new TextRun({ text: vars.orePausaLabel, highlight: 'yellow' }),
+          new TextRun({ text: vars.orePausaLabel }),
           new TextRun({ text: '= ' + vars.kWhCalcolati + ' kWh' + (c.superaCap ? ' (questo dato \u00e8 maggiore della capacit\u00e0 dello storage, quindi lo limitiamo a ' + vars.capacitaStorage + ' kWh).' : '.') }),
         ],
       }));
@@ -860,20 +860,44 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       ch.push(body('Ecco i numeri della Vostra convenienza:'));
       ch.push(emptyLine());
 
-      // Tabella risultati
+      // Pedice helper
+      function sup(n) { return new TextRun({ text: ' ' + n, superScript: true, size: 18, color: '2E75B6', font: 'Calibri' }); }
+
+      // Tabella risultati con pedici
+      function kvRowSup(label, value, highlight, supText) {
+        var valRuns = [new TextRun({ text: value, bold: true, size: 22, font: 'Calibri', color: highlight ? '1A7A3A' : '1A3A5C' })];
+        if (supText) valRuns.push(new TextRun({ text: ' ' + supText, superScript: true, size: 16, color: '2E75B6', font: 'Calibri' }));
+        return new TableRow({
+          cantSplit: true,
+          children: [
+            new TableCell({
+              borders: noBorders, width: { size: 5500, type: WidthType.DXA },
+              margins: { top: 60, bottom: 60, left: 120, right: 120 },
+              children: [new Paragraph({ children: [new TextRun({ text: label, size: 22, font: 'Calibri', color: '555555' })] })],
+            }),
+            new TableCell({
+              borders: noBorders, width: { size: 3860, type: WidthType.DXA },
+              margins: { top: 60, bottom: 60, left: 120, right: 120 },
+              shading: highlight ? { fill: 'E8F4E8', type: ShadingType.CLEAR } : undefined,
+              children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: valRuns })],
+            }),
+          ],
+        });
+      }
+
       ch.push(new Table({
         width: { size: 9360, type: WidthType.DXA },
         columnWidths: [5500, 3860],
         rows: [
-          kvRow('Risparmio da accumulo feriale (A)', fmtNum(c.risparmioA) + ' \u20AC/anno'),
-          kvRow('Risparmio da accumulo weekend (B)', fmtNum(c.risparmioB) + ' \u20AC/anno'),
-          kvRow('Risparmio totale annuo', fmtNum(c.risparmioTotale) + ' \u20AC/anno', true),
+          kvRowSup('Risparmio da accumulo feriale (A)', fmtNum(c.risparmioA) + ' \u20AC/anno', false, '\u00B9'),
+          kvRowSup('Risparmio da accumulo weekend (B)', fmtNum(c.risparmioB) + ' \u20AC/anno', false, '\u00B2'),
+          kvRowSup('Risparmio totale annuo', fmtNum(c.risparmioTotale) + ' \u20AC/anno', true, '\u00B3'),
           kvRow('', ''),
           kvRow('Costo dello storage', fmtNum(inp.costoStorage) + ' \u20AC'),
           kvRow('Beneficio Iper-ammortamento (43,2%)', '\u2013 ' + fmtNum(inp.costoStorage - c.costoEffettivo) + ' \u20AC'),
-          kvRow('Costo effettivo dell\u2019investimento', fmtNum(c.costoEffettivo) + ' \u20AC'),
+          kvRowSup('Costo effettivo dell\u2019investimento', fmtNum(c.costoEffettivo) + ' \u20AC', false, '\u2074'),
           kvRow('', ''),
-          kvRow('Tempo di ritorno dell\u2019investimento', c.payback.toFixed(1).replace('.', ',') + ' anni', true),
+          kvRowSup('Tempo di ritorno dell\u2019investimento', c.payback.toFixed(1).replace('.', ',') + ' anni', true, '\u2075'),
         ],
       }));
       ch.push(emptyLine());
@@ -881,6 +905,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       ch.push(bodyMixed([
         new TextRun({ text: 'In sintesi: l\u2019investimento si ripaga in ', size: 22, font: 'Calibri' }),
         new TextRun({ text: 'circa ' + c.payback.toFixed(1).replace('.', ',') + ' anni', bold: true, size: 24, font: 'Calibri', color: '1A7A3A' }),
+        sup('\u2075'),
         new TextRun({ text: ', dopo i quali il risparmio di ' + fmtNum(c.risparmioTotale) + ' \u20AC/anno diventa puro guadagno per la Vostra azienda.', size: 22, font: 'Calibri' }),
       ]));
 
@@ -893,6 +918,101 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       ch.push(heading('5. Modalit\u00e0 di realizzazione'));
       ch.push(body('L\u2019intervento pu\u00f2 essere realizzato secondo la formula pi\u00f9 adatta alle Vostre esigenze:'));
       righeP('txtPropModalita').forEach(function(r) { ch.push(bullet(r, 'comm_bullets2')); });
+
+      // === 6. DETTAGLIO CALCOLI ===
+      ch.push(heading('6. Dettaglio calcoli'));
+      ch.push(body('Di seguito i dati di partenza e il dettaglio di ogni calcolo citato nel documento, per una verifica completa e trasparente.'));
+      ch.push(emptyLine());
+
+      // Helper per celle tabella dettaglio
+      var tBorder = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
+      var tBorders = { top: tBorder, bottom: tBorder, left: tBorder, right: tBorder };
+      function headerCell(text, w) {
+        return new TableCell({
+          borders: tBorders, width: { size: w, type: WidthType.DXA },
+          shading: { fill: '1A3A5C', type: ShadingType.CLEAR },
+          margins: { top: 60, bottom: 60, left: 100, right: 100 },
+          children: [new Paragraph({ children: [new TextRun({ text: text, bold: true, size: 20, font: 'Calibri', color: 'FFFFFF' })] })],
+        });
+      }
+      function dataCell(text, w, bold) {
+        return new TableCell({
+          borders: tBorders, width: { size: w, type: WidthType.DXA },
+          margins: { top: 50, bottom: 50, left: 100, right: 100 },
+          children: [new Paragraph({ children: [new TextRun({ text: text, size: 20, font: 'Calibri', bold: !!bold })] })],
+        });
+      }
+
+      // Tabella A — Dati di partenza
+      ch.push(bodyBold('Tabella A \u2014 Dati di partenza'));
+      var tAColW = [3800, 2200, 3360];
+      ch.push(new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        columnWidths: tAColW,
+        rows: [
+          new TableRow({ cantSplit: true, children: [headerCell('Dato', tAColW[0]), headerCell('Valore', tAColW[1]), headerCell('Nota', tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Potenza FTV', tAColW[0]), dataCell(vars.kWp + ' kWp', tAColW[1], true), dataCell('Impianto esistente', tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Produzione annua', tAColW[0]), dataCell(vars.produzioneAnnua + ' kWh', tAColW[1], true), dataCell(vars.kWp + ' \u00D7 1.200 h/anno', tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Media giornaliera', tAColW[0]), dataCell(vars.mediaGiornaliera + ' kWh', tAColW[1], true), dataCell(vars.produzioneAnnua + ' \u00F7 365', tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Ore luce produttive', tAColW[0]), dataCell(vars.oreLuce + ' h/gg', tAColW[1], true), dataCell('Media annuale', tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Produzione oraria', tAColW[0]), dataCell(vars.kWhPerOra + ' kWh', tAColW[1], true), dataCell(vars.mediaGiornaliera + ' \u00F7 ' + vars.oreLuce, tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Energia immessa in rete (25%)', tAColW[0]), dataCell(vars.energiaImmessa + ' kWh/anno', tAColW[1], true), dataCell(vars.produzioneAnnua + ' \u00D7 25%', tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Prezzo vendita rete', tAColW[0]), dataCell(vars.prezzoVendita + ' \u20AC/kWh', tAColW[1], true), dataCell('\u2014', tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Costo acquisto rete', tAColW[0]), dataCell(vars.costoAcquisto + ' \u20AC/kWh', tAColW[1], true), dataCell('\u2014', tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Delta prezzo', tAColW[0]), dataCell(vars.delta + ' \u20AC/kWh', tAColW[1], true), dataCell(vars.costoAcquisto + ' \u2212 ' + vars.prezzoVendita, tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Capacit\u00e0 storage', tAColW[0]), dataCell(vars.capacitaStorage + ' kWh', tAColW[1], true), dataCell('\u2014', tAColW[2])] }),
+          new TableRow({ cantSplit: true, children: [dataCell('Durata pausa pranzo', tAColW[0]), dataCell(vars.orePausaLabel, tAColW[1], true), dataCell('\u2014', tAColW[2])] }),
+        ],
+      }));
+      ch.push(emptyLine());
+
+      // Nota cap se necessario
+      if (c.superaCap) {
+        ch.push(body('Nota: la produzione oraria \u00D7 le ore di pausa produce ' + vars.kWhCalcolati + ' kWh, superiore alla capacit\u00e0 dello storage. Il valore \u00e8 stato limitato a ' + vars.capacitaStorage + ' kWh.'));
+        ch.push(emptyLine());
+      }
+
+      // Tabella B — Calcoli
+      ch.push(bodyBold('Tabella B \u2014 Calcoli'));
+      var tBColW = [500, 2400, 4160, 2300];
+      ch.push(new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        columnWidths: tBColW,
+        rows: [
+          new TableRow({ cantSplit: true, children: [headerCell('Rif.', tBColW[0]), headerCell('Descrizione', tBColW[1]), headerCell('Calcolo', tBColW[2]), headerCell('Risultato', tBColW[3])] }),
+          new TableRow({ cantSplit: true, children: [
+            dataCell('\u00B9', tBColW[0], true),
+            dataCell('Risparmio accumulo feriale (A)', tBColW[1]),
+            dataCell(vars.kWhAccPomeriggio + ' kWh \u00D7 ' + vars.delta + ' \u20AC/kWh \u00D7 5 gg \u00D7 52 sett.', tBColW[2]),
+            dataCell(vars.risparmioA + ' \u20AC/anno', tBColW[3], true),
+          ]}),
+          new TableRow({ cantSplit: true, children: [
+            dataCell('\u00B2', tBColW[0], true),
+            dataCell('Risparmio accumulo weekend (B)', tBColW[1]),
+            dataCell(vars.capacitaStorage + ' kWh \u00D7 ' + vars.delta + ' \u20AC/kWh \u00D7 52 sett.', tBColW[2]),
+            dataCell(vars.risparmioB + ' \u20AC/anno', tBColW[3], true),
+          ]}),
+          new TableRow({ cantSplit: true, children: [
+            dataCell('\u00B3', tBColW[0], true),
+            dataCell('Risparmio totale annuo', tBColW[1]),
+            dataCell('\u00B9 + \u00B2', tBColW[2]),
+            dataCell(vars.risparmioTotale + ' \u20AC/anno', tBColW[3], true),
+          ]}),
+          new TableRow({ cantSplit: true, children: [
+            dataCell('\u2074', tBColW[0], true),
+            dataCell('Costo effettivo storage', tBColW[1]),
+            dataCell(vars.costoStorage + ' \u20AC \u00D7 (1 \u2212 43,2%)', tBColW[2]),
+            dataCell(vars.costoEffettivo + ' \u20AC', tBColW[3], true),
+          ]}),
+          new TableRow({ cantSplit: true, children: [
+            dataCell('\u2075', tBColW[0], true),
+            dataCell('Tempo di ritorno', tBColW[1]),
+            dataCell('\u2074 \u00F7 \u00B3', tBColW[2]),
+            dataCell(vars.payback + ' anni', tBColW[3], true),
+          ]}),
+        ],
+      }));
+      ch.push(emptyLine());
 
       // === CHIUSURA === (da textarea)
       ch.push(new Paragraph({
