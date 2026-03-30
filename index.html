@@ -192,7 +192,7 @@ per acquistare l'energia dalla rete l'azienda paga {costoAcquisto} €/kWh (tass
 l'azienda fa una pausa pranzo di (1 h, 1.5 h, 2 h, 2.5 h, 3 h) durante la quale ricarica lo Storage
 la differenza di valore dell'energia nei due casi precedenti risulta essere {costoAcquisto}-{prezzoVendita} = {delta} €/kWh
 sabato e alla domenica, normalmente, l'azienda non lavora
-consideriamo {storageDescrizione} di capacità</textarea>
+consideriamo {storageDescrizione}à</textarea>
           <div class="hint">Segnaposto: {prezzoVendita}, {costoAcquisto}, {delta}, {capacitaStorage}</div>
         </div>
 
@@ -256,7 +256,7 @@ Questo significa che la Vostra azienda perde {delta} € per ogni kWh di energia
 
         <div class="text-group">
           <label>2. La soluzione proposta (intro)</label>
-          <textarea id="txtPropSoluzione" rows="2">Proponiamo l'installazione di {storageDescrizione} allo stato solido, dimensionato su misura per il Vostro profilo di consumo.
+          <textarea id="txtPropSoluzione" rows="2">Proponiamo l'installazione di {storageDescrizione}, {storageDimensionato} su misura per il Vostro profilo di consumo.
 Il sistema opera in due modalità complementari:</textarea>
           <div class="hint">Segnaposto: {capacitaStorage}</div>
         </div>
@@ -371,7 +371,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
     function getDefaultTesti() {
       return {
         txtPremessa: "La ditta {nomeAzienda} dispone gi\u00e0 di un impianto fotovoltaico da {kWp} kWp\nLa produzione annua media di energia \u00e8 indicativamente stimata in {kWp} x1200 = {produzioneAnnua} kWh (media giornaliera matematica= {mediaGiornaliera} kWh, media ore di luce produttive per il fotovoltaico = {oreLuce} h /gg)\nDell\u2019energia prodotta dal fotovoltaico assumiamo che circa il 25% non venga consumato e viene quindi immesso in rete/venduto (il 25% ammonta a {energiaImmessa} kWh/anno)\nQuesta energia viene attualmente valorizzata a un prezzo molto inferiore rispetto al costo dell\u2019energia acquistata dalla rete.",
-        txtIpotesi: "l\u2019energia non utilizzata ed inserita in rete viene valorizzata a {prezzoVendita} \u20AC/kWh - da confermare\nper acquistare l\u2019energia dalla rete l\u2019azienda paga {costoAcquisto} \u20AC/kWh (tasse ed Iva inclusa) - da confermare\nl\u2019azienda fa una pausa pranzo di (1 h, 1.5 h, 2 h, 2.5 h, 3 h) durante la quale ricarica lo Storage\nla differenza di valore dell\u2019energia nei due casi precedenti risulta essere {costoAcquisto}-{prezzoVendita} = {delta} \u20AC/kWh\nsabato e alla domenica, normalmente, l\u2019azienda non lavora\nconsideriamo {storageDescrizione} di capacit\u00e0",
+        txtIpotesi: "l\u2019energia non utilizzata ed inserita in rete viene valorizzata a {prezzoVendita} \u20AC/kWh - da confermare\nper acquistare l\u2019energia dalla rete l\u2019azienda paga {costoAcquisto} \u20AC/kWh (tasse ed Iva inclusa) - da confermare\nl\u2019azienda fa una pausa pranzo di (1 h, 1.5 h, 2 h, 2.5 h, 3 h) durante la quale ricarica lo Storage\nla differenza di valore dell\u2019energia nei due casi precedenti risulta essere {costoAcquisto}-{prezzoVendita} = {delta} \u20AC/kWh\nsabato e alla domenica, normalmente, l\u2019azienda non lavora\nconsideriamo {storageDescrizione}\u00e0",
         txtTaglia: "La capacit\u00e0 di accumulo viene definita per coprire tipicamente:\n15\u201330% del fabbisogno energetico giornaliero, evitando sovradimensionamenti che allungherebbero il payback.\nQuindi, per il cliente {nomeCorto} consideriamo lo Storage da {capacitaStorage} kWh",
         txtCalcolo: "Considerando la produzione annua di energia stimata in {produzioneAnnua} kWh significa che, mediamente nell\u2019anno (non importa se in estate o in inverno), avremo una produzione giornaliera pari a {mediaGiornaliera} kWh;\nSe dividiamo questa produzione giornaliera per le {oreLuce} h/gg produttive per l\u2019impianto fotovoltaico, avremo, in media, {kWhPerOra} kWh prodotti per ogni ora di luce.",
         txtWeekend: "Vengono considerati solo i sabati o solo le domeniche perch\u00e9 di sabato o di domenica lo storage viene riempito in alcune ore (di solito il sabato) e l\u2019energia accumulata viene utilizzata solo il luned\u00ec successivo, visto che al sabato o alla domenica non sono previsti consumi.",
@@ -380,7 +380,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         txtContratto: "investimento diretto,\nfinanziamento agevolato,\nE.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.",
         txtRisultato: "Un sistema di accumulo dimensionato su misura, che massimizza il ritorno economico e garantisce affidabilit\u00e0 operativa nel tempo.",
         txtPropContesto: "La Vostra azienda dispone gi\u00e0 di un impianto fotovoltaico da {kWp} kWp, con una produzione annua stimata di circa {produzioneAnnua} kWh.\nAttualmente, circa il 25% di questa energia ({energiaImmessa} kWh/anno) non viene consumata e viene immessa in rete a un prezzo di {prezzoVendita} \u20AC/kWh, ben al di sotto del costo di acquisto dalla rete di {costoAcquisto} \u20AC/kWh.\nQuesto significa che la Vostra azienda perde {delta} \u20AC per ogni kWh di energia prodotta e non utilizzata. Un sistema di accumulo permette di recuperare questa differenza, trasformando un costo nascosto in un risparmio concreto.",
-        txtPropSoluzione: "Proponiamo l\u2019installazione di {storageDescrizione} allo stato solido, dimensionato su misura per il Vostro profilo di consumo.\nIl sistema opera in due modalit\u00e0 complementari:",
+        txtPropSoluzione: "Proponiamo l\u2019installazione di {storageDescrizione}, {storageDimensionato} su misura per il Vostro profilo di consumo.\nIl sistema opera in due modalit\u00e0 complementari:",
         txtPropWeekend: "Il sabato, con l\u2019azienda ferma, lo storage si ricarica completamente ({capacitaStorage} kWh) e l\u2019energia accumulata viene utilizzata il luned\u00ec mattina, evitando l\u2019acquisto dalla rete nelle prime ore della settimana.",
         txtPropPerche: "l\u2019aumento atteso del costo dell\u2019energia, che amplifica il valore del risparmio\nla possibilit\u00e0 di ottimizzare i costi con l\u2019arbitraggio tra fasce orarie (F1\u2013F2\u2013F3)\nla protezione da micro-interruzioni e buchi di tensione, che possono causare danni alla produzione ben superiori al costo dell\u2019energia\nla possibilit\u00e0 di cumulare ulteriori incentivi (Nuova Sabatini, Conto Termico 3.0)\nla possibilit\u00e0 di aumentare la potenza dell\u2019impianto fotovoltaico",
         txtPropModalita: "Investimento diretto \u2014 massimo risparmio nel lungo periodo\nFinanziamento agevolato \u2014 rate compatibili con il risparmio generato\nE.P.C. (Energy Performance Contract) \u2014 nessun investimento iniziale, remunerazione legata ai risparmi effettivi",
@@ -621,7 +621,8 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         capacitaStorage: fmtNum(c.capacitaTotale),
         capacitaUnitaria: fmtNum(inp.capacitaStorage),
         nStorage: c.nStorage,
-        storageDescrizione: c.nStorage > 1 ? c.nStorage + ' Storage da ' + fmtNum(inp.capacitaStorage) + ' kWh ciascuno (' + fmtNum(c.capacitaTotale) + ' kWh totali)' : 'uno Storage da ' + fmtNum(c.capacitaTotale) + ' kWh',
+        storageDescrizione: c.nStorage > 1 ? c.nStorage + ' Storage allo Stato Solido da ' + fmtNum(inp.capacitaStorage) + ' kWh ciascuno, per una capacit\u00e0 complessiva di ' + fmtNum(c.capacitaTotale) + ' kWh' : 'uno Storage allo Stato Solido da ' + fmtNum(c.capacitaTotale) + ' kWh',
+        storageDimensionato: c.nStorage > 1 ? 'dimensionati' : 'dimensionato',
         costoStorage: fmtNum(c.costoStorageTotale),
         costoStorageUnitario: fmtNum(inp.costoStorage),
         costoEffettivo: fmtNum(c.costoEffettivo),
@@ -808,7 +809,8 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         capacitaStorage: fmtNum(c.capacitaTotale),
         capacitaUnitaria: fmtNum(inp.capacitaStorage),
         nStorage: c.nStorage,
-        storageDescrizione: c.nStorage > 1 ? c.nStorage + ' Storage da ' + fmtNum(inp.capacitaStorage) + ' kWh ciascuno (' + fmtNum(c.capacitaTotale) + ' kWh totali)' : 'uno Storage da ' + fmtNum(c.capacitaTotale) + ' kWh',
+        storageDescrizione: c.nStorage > 1 ? c.nStorage + ' Storage allo Stato Solido da ' + fmtNum(inp.capacitaStorage) + ' kWh ciascuno, per una capacit\u00e0 complessiva di ' + fmtNum(c.capacitaTotale) + ' kWh' : 'uno Storage allo Stato Solido da ' + fmtNum(c.capacitaTotale) + ' kWh',
+        storageDimensionato: c.nStorage > 1 ? 'dimensionati' : 'dimensionato',
         costoStorage: fmtNum(c.costoStorageTotale),
         costoStorageUnitario: fmtNum(inp.costoStorage), costoEffettivo: fmtNum(c.costoEffettivo),
         kWhPerOra: fmtNum(c.kWhPerOra), kWhCalcolati: fmtNum(c.kWhCalcolati),
@@ -956,8 +958,8 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
           kvRowSup('Risparmio da accumulo weekend (B)', fmtNum(c.risparmioB) + ' \u20AC/anno', false, '\u00B2'),
           kvRowSup('Risparmio totale annuo', fmtNum(c.risparmioTotale) + ' \u20AC/anno', true, '\u00B3'),
           kvRow('', ''),
-          kvRow('Costo dello storage', fmtNum(inp.costoStorage) + ' \u20AC'),
-          kvRow('Beneficio Iper-ammortamento (43,2%)', '\u2013 ' + fmtNum(inp.costoStorage - c.costoEffettivo) + ' \u20AC'),
+          kvRow('Costo dello storage', fmtNum(c.costoStorageTotale) + ' \u20AC'),
+          kvRow('Beneficio Iper-ammortamento (43,2%)', '\u2013 ' + fmtNum(c.costoStorageTotale - c.costoEffettivo) + ' \u20AC'),
           kvRowSup('Costo effettivo dell\u2019investimento', fmtNum(c.costoEffettivo) + ' \u20AC', false, '\u2074'),
           kvRow('', ''),
           kvRowSup('Tempo di ritorno dell\u2019investimento', c.payback.toFixed(1).replace('.', ',') + ' anni', true, '\u2075'),
