@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generatore Valutazione Economica Storage</title>
+  <script src="docx.umd.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; color: #333; min-height: 100vh; }
+    .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+    h1 { text-align: center; color: #1a3a5c; margin-bottom: 8px; font-size: 1.6rem; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 32px; font-size: 0.95rem; }
+    .card { background: #fff; border-radius: 12px; padding: 28px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .card h2 { color: #1a3a5c; font-size: 1.15rem; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e8ecf1; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-weight: 600; font-size: 0.85rem; color: #555; margin-bottom: 6px; }
+    input, select { padding: 10px 14px; border: 1.5px solid #d0d5dd; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s; }
+    input:focus, select:focus { outline: none; border-color: #2e75b6; box-shadow: 0 0 0 3px rgba(46,117,182,0.12); }
+    .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .calc-item { background: #f7f9fc; border-radius: 8px; padding: 12px 16px; }
+    .calc-item .label { font-size: 0.8rem; color: #777; margin-bottom: 4px; }
+    .calc-item .value { font-size: 1.1rem; font-weight: 700; color: #1a3a5c; }
+    .calc-item.highlight { background: #e8f4e8; }
+    .calc-item.highlight .value { color: #2d7a2d; }
+    .btn { display: block; width: 100%; padding: 14px; background: #2e75b6; color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: #1e5a96; }
+    .btn:active { transform: scale(0.98); }
+    .testi-section { margin-top: 0; }
+    .testi-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+    .testi-toggle .arrow { transition: transform 0.2s; font-size: 1.2rem; color: #999; }
+    .testi-toggle .arrow.open { transform: rotate(90deg); }
+    .testi-body { display: none; margin-top: 16px; }
+    .testi-body.open { display: block; }
+    .text-group { margin-bottom: 16px; }
+    .text-group label { display: block; margin-bottom: 6px; }
+    .text-group textarea { width: 100%; min-height: 80px; padding: 10px 14px; border: 1.5px solid #d0d5dd; border-radius: 8px; font-family: inherit; font-size: 0.9rem; resize: vertical; line-height: 1.5; }
+    .text-group textarea:focus { outline: none; border-color: #2e75b6; box-shadow: 0 0 0 3px rgba(46,117,182,0.12); }
+    .text-group .hint { font-size: 0.75rem; color: #999; margin-top: 4px; }
+    .btn-reset { background: none; border: 1px solid #d0d5dd; color: #555; padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; margin-top: 8px; }
+    .btn-reset:hover { background: #f0f0f0; }
+    @media (max-width: 600px) { .form-grid, .calc-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Generatore Valutazione Economica Storage</h1>
+    <p class="subtitle">Inserisci i dati del cliente per generare il documento .docx</p>
+
+    <div class="card">
+      <h2>Dati Cliente</h2>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label for="nomeAzienda">Ragione Sociale</label>
+          <input type="text" id="nomeAzienda" value="MOLLIFICIO BORDIGNON Srl" placeholder="es. ROSSI SPA">
+        </div>
+        <div class="form-group">
+          <label for="potenzaFTV">Potenza FTV (kWp)</label>
+          <input type="number" id="potenzaFTV" value="450" step="1" min="1">
+        </div>
+        <div class="form-group">
+          <label for="capacitaStorage">Capacit&agrave; Storage (kWh)</label>
+          <select id="capacitaStorage">
+            <option value="261" selected>261 kWh - PMI / carichi contenuti</option>
+            <option value="1000">~1 MWh - Industria standard</option>
+            <option value="3350">3,35 MWh - Energivori / multi-turno</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="prezzoVendita">Prezzo vendita energia in rete (&euro;/kWh)</label>
+          <input type="number" id="prezzoVendita" value="0.09" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label for="costoAcquisto">Costo acquisto energia dalla rete (&euro;/kWh)</label>
+          <input type="number" id="costoAcquisto" value="0.25" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label for="orePausa">Durata pausa pranzo (ore)</label>
+          <select id="orePausa">
+            <option value="1">1 h</option>
+            <option value="1.5" selected>1,5 h</option>
+            <option value="2">2 h</option>
+            <option value="2.5">2,5 h</option>
+            <option value="3">3 h</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="oreLuce">Ore luce produttive FTV (h/gg)</label>
+          <input type="number" id="oreLuce" value="7" step="0.5" min="1" max="14">
+        </div>
+        <div class="form-group">
+          <label for="costoStorage">Costo Storage (&euro;)</label>
+          <input type="number" id="costoStorage" value="70470" step="1" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Anteprima Calcoli</h2>
+      <div class="calc-grid">
+        <div class="calc-item">
+          <div class="label">Produzione annua</div>
+          <div class="value" id="calcProdAnnua">-</div>
+        </div>
+        <div class="calc-item">
+          <div class="label">Media giornaliera</div>
+          <div class="value" id="calcMediaGG">-</div>
+        </div>
+        <div class="calc-item">
+          <div class="label">kWh per ora di luce</div>
+          <div class="value" id="calcKWhOra">-</div>
+        </div>
+        <div class="calc-item">
+          <div class="label">Energia immessa in rete/anno</div>
+          <div class="value" id="calcImmessa">-</div>
+        </div>
+        <div class="calc-item">
+          <div class="label">kWh accumulati (pomeriggio)</div>
+          <div class="value" id="calcAccPom">-</div>
+        </div>
+        <div class="calc-item">
+          <div class="label">Delta prezzo</div>
+          <div class="value" id="calcDelta">-</div>
+        </div>
+        <div class="calc-item">
+          <div class="label">Risparmio A (feriali)</div>
+          <div class="value" id="calcRispA">-</div>
+        </div>
+        <div class="calc-item">
+          <div class="label">Risparmio B (weekend)</div>
+          <div class="value" id="calcRispB">-</div>
+        </div>
+        <div class="calc-item highlight">
+          <div class="label">Risparmio totale annuo</div>
+          <div class="value" id="calcRispTot">-</div>
+        </div>
+        <div class="calc-item">
+          <div class="label">Costo effettivo (con iper-amm.)</div>
+          <div class="value" id="calcCostoEff">-</div>
+        </div>
+        <div class="calc-item highlight">
+          <div class="label">Payback</div>
+          <div class="value" id="calcPayback">-</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card testi-section">
+      <div class="testi-toggle" onclick="toggleTesti()">
+        <h2 style="margin-bottom:0; padding-bottom:0; border:none;">Personalizza Testi</h2>
+        <span class="arrow" id="testiArrow">&#9654;</span>
+      </div>
+      <div class="testi-body" id="testiBody">
+        <p style="font-size:0.85rem; color:#777; margin-bottom:16px;">Modifica i testi delle sezioni del documento. Usa i segnaposto tra parentesi graffe per i valori dinamici. Esempio: <code>{nomeAzienda}</code>, <code>{kWp}</code>, <code>{produzioneAnnua}</code></p>
+
+        <div class="text-group">
+          <label>1 - Premessa</label>
+          <textarea id="txtPremessa" rows="5">La ditta {nomeAzienda} dispone già di un FTV da {kWp} kWp
+La produzione annua media di energia è indicativamente stimata in {kWp} x1200 = {produzioneAnnua} kWh (media giornaliera matematica= {mediaGiornaliera} kWh, media ore di luce produttive per il ftv = {oreLuce} h /gg)
+Dell'energia prodotta dal FTV assumiamo che circa il 25% non venga consumato e viene quindi immesso in rete/venduto (il 25% ammonta a {energiaImmessa} kWh/anno)
+Questa energia viene attualmente valorizzata a un prezzo molto inferiore rispetto al costo dell'energia acquistata dalla rete.</textarea>
+          <div class="hint">Segnaposto: {nomeAzienda}, {kWp}, {produzioneAnnua}, {mediaGiornaliera}, {oreLuce}, {energiaImmessa}</div>
+        </div>
+
+        <div class="text-group">
+          <label>2 - Ipotesi (una per riga, diventano punti elenco)</label>
+          <textarea id="txtIpotesi" rows="6">l'energia non utilizzata ed inserita in rete viene valorizzata a {prezzoVendita} €/kWh - da confermare
+per acquistare l'energia dalla rete l'azienda paga {costoAcquisto} €/kWh (tasse ed Iva inclusa) - da confermare
+l'azienda fa una pausa pranzo di (1 h, 1.5 h, 2 h, 2.5 h, 3 h) durante la quale ricarica lo Storage
+la differenza di valore dell'energia nei due casi precedenti risulta essere {costoAcquisto}-{prezzoVendita} = {delta} €/kWh
+sabato e alla domenica, normalmente, l'azienda non lavora
+consideriamo uno Storage allo Stato Solido da {capacitaStorage} kWh di capacità</textarea>
+          <div class="hint">Segnaposto: {prezzoVendita}, {costoAcquisto}, {delta}, {capacitaStorage}</div>
+        </div>
+
+        <div class="text-group">
+          <label>3 - Scelta taglia ottimale</label>
+          <textarea id="txtTaglia" rows="4">La capacità di accumulo viene definita per coprire tipicamente:
+15–30% del fabbisogno energetico giornaliero, evitando sovradimensionamenti che allungherebbero il payback.
+Quindi, per il cliente {nomeCorto} consideriamo lo Storage da {capacitaStorage} kWh</textarea>
+          <div class="hint">Segnaposto: {nomeCorto}, {capacitaStorage}</div>
+        </div>
+
+        <div class="text-group">
+          <label>4 - Calcolo kWh (testo introduttivo)</label>
+          <textarea id="txtCalcolo" rows="3">Considerando la produzione annua di energia stimata in {produzioneAnnua} kWh significa che, mediamente nell'anno (non importa se in estate o in inverno), avremo una produzione giornaliera pari a {mediaGiornaliera} kWh;
+Se dividiamo questa produzione giornaliera per le {oreLuce} h/gg produttive per l'impianto FTV, avremo, in media, {kWhPerOra} kWh prodotti per ogni ora di luce.</textarea>
+          <div class="hint">Segnaposto: {produzioneAnnua}, {mediaGiornaliera}, {oreLuce}, {kWhPerOra}</div>
+        </div>
+
+        <div class="text-group">
+          <label>B) Nota weekend</label>
+          <textarea id="txtWeekend" rows="2">Vengono considerati solo i sabati o solo le domeniche perché di sabato o di domenica lo storage viene riempito in alcune ore (di solito il sabato) e l'energia accumulata viene utilizzata solo il lunedì successivo, visto che al sabato o alla domenica non sono previsti consumi.</textarea>
+        </div>
+
+        <div class="text-group">
+          <label>Nota payback</label>
+          <textarea id="txtPaybackNota" rows="2">Considerando il costo indicativo dello Storage da {capacitaStorage} kW pari a {costoStorage} € (da confermare), riducibile del 43,2 %, grazie all'Iper-ammortamento previsto dall'ultima legge finanziaria (senza considerare altre misure eventualmente cumulabili quali la Nuova Sabatini o il Conto termico 3.0), abbiamo un costo effettivo pari a {costoEffettivo} €.</textarea>
+          <div class="hint">Segnaposto: {capacitaStorage}, {costoStorage}, {costoEffettivo}</div>
+        </div>
+
+        <div class="text-group">
+          <label>Abbreviazione payback (una per riga, punti elenco)</label>
+          <textarea id="txtAbbreviazione" rows="3">il costo dell'energia salirà (come è molto probabile)
+si riesce a ridurre i costi energetici con l'arbitraggio (distribuzione dei consumi nelle fasce F1–F2–F3)
+si riducono o si evitano eventi critici (micro-interruzioni, buchi di tensione) che danneggiano la produzione aziendale</textarea>
+        </div>
+
+        <div class="text-group">
+          <label>5 - Struttura contrattuale (una per riga, punti elenco)</label>
+          <textarea id="txtContratto" rows="3">investimento diretto,
+finanziamento agevolato,
+E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</textarea>
+        </div>
+
+        <div class="text-group">
+          <label>Risultato</label>
+          <textarea id="txtRisultato" rows="2">Un sistema di accumulo dimensionato su misura, che massimizza il ritorno economico e garantisce affidabilità operativa nel tempo.</textarea>
+        </div>
+
+        <button class="btn-reset" onclick="resetTesti()">Ripristina testi predefiniti</button>
+      </div>
+    </div>
+
+    <button class="btn" onclick="generaDocumento()">Genera Documento .docx</button>
+  </div>
+
+  <script>
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, LevelFormat } = docx;
+
+    function getInputs() {
+      return {
+        nomeAzienda: document.getElementById('nomeAzienda').value.trim(),
+        kWp: parseFloat(document.getElementById('potenzaFTV').value) || 0,
+        prezzoVendita: parseFloat(document.getElementById('prezzoVendita').value) || 0,
+        costoAcquisto: parseFloat(document.getElementById('costoAcquisto').value) || 0,
+        orePausa: parseFloat(document.getElementById('orePausa').value) || 0,
+        capacitaStorage: parseFloat(document.getElementById('capacitaStorage').value) || 0,
+        oreLuce: parseFloat(document.getElementById('oreLuce').value) || 7,
+        costoStorage: parseFloat(document.getElementById('costoStorage').value) || 0,
+      };
+    }
+
+    function calcola(inp) {
+      const produzioneAnnua = inp.kWp * 1200;
+      const mediaGiornaliera = Math.round(produzioneAnnua / 365);
+      const kWhPerOra = Math.round(mediaGiornaliera / inp.oreLuce);
+      const energiaImmessa = Math.round(produzioneAnnua * 0.25);
+      const delta = inp.costoAcquisto - inp.prezzoVendita;
+      const kWhCalcolati = Math.round(kWhPerOra * inp.orePausa);
+      const superaCap = kWhCalcolati > inp.capacitaStorage;
+      const kWhAccPomeriggio = superaCap ? inp.capacitaStorage : kWhCalcolati;
+      const risparmioA = Math.floor(kWhAccPomeriggio * delta * 5 * 52);
+      const risparmioB = Math.floor(inp.capacitaStorage * delta * 52);
+      const risparmioTotale = risparmioA + risparmioB;
+      const costoEffettivo = Math.floor(inp.costoStorage * (1 - 0.432));
+      const payback = risparmioTotale > 0 ? (costoEffettivo / risparmioTotale) : 0;
+      return { produzioneAnnua, mediaGiornaliera, kWhPerOra, energiaImmessa, delta, kWhCalcolati, kWhAccPomeriggio, superaCap, risparmioA, risparmioB, risparmioTotale, costoEffettivo, payback };
+    }
+
+    function fmtNum(n) { return n.toLocaleString('it-IT'); }
+    function fmtEur(n) { return fmtNum(n) + ' \u20AC'; }
+
+    function aggiornaPreview() {
+      const inp = getInputs();
+      const c = calcola(inp);
+      document.getElementById('calcProdAnnua').textContent = fmtNum(c.produzioneAnnua) + ' kWh';
+      document.getElementById('calcMediaGG').textContent = fmtNum(c.mediaGiornaliera) + ' kWh';
+      document.getElementById('calcKWhOra').textContent = fmtNum(c.kWhPerOra) + ' kWh';
+      document.getElementById('calcImmessa').textContent = fmtNum(c.energiaImmessa) + ' kWh';
+      document.getElementById('calcAccPom').textContent = fmtNum(c.kWhAccPomeriggio) + ' kWh' + (c.superaCap ? ' (limitato da cap. storage)' : '');
+      document.getElementById('calcDelta').textContent = c.delta.toFixed(2).replace('.', ',') + ' \u20AC/kWh';
+      document.getElementById('calcRispA').textContent = fmtEur(c.risparmioA) + '/anno';
+      document.getElementById('calcRispB').textContent = fmtEur(c.risparmioB) + '/anno';
+      document.getElementById('calcRispTot').textContent = fmtEur(c.risparmioTotale) + '/anno';
+      document.getElementById('calcCostoEff').textContent = fmtEur(c.costoEffettivo);
+      document.getElementById('calcPayback').textContent = c.payback.toFixed(2).replace('.', ',') + ' anni';
+    }
+
+    function toggleTesti() {
+      var body = document.getElementById('testiBody');
+      var arrow = document.getElementById('testiArrow');
+      body.classList.toggle('open');
+      arrow.classList.toggle('open');
+    }
+
+    function getDefaultTesti() {
+      return {
+        txtPremessa: "La ditta {nomeAzienda} dispone gi\u00e0 di un FTV da {kWp} kWp\nLa produzione annua media di energia \u00e8 indicativamente stimata in {kWp} x1200 = {produzioneAnnua} kWh (media giornaliera matematica= {mediaGiornaliera} kWh, media ore di luce produttive per il ftv = {oreLuce} h /gg)\nDell\u2019energia prodotta dal FTV assumiamo che circa il 25% non venga consumato e viene quindi immesso in rete/venduto (il 25% ammonta a {energiaImmessa} kWh/anno)\nQuesta energia viene attualmente valorizzata a un prezzo molto inferiore rispetto al costo dell\u2019energia acquistata dalla rete.",
+        txtIpotesi: "l\u2019energia non utilizzata ed inserita in rete viene valorizzata a {prezzoVendita} \u20AC/kWh - da confermare\nper acquistare l\u2019energia dalla rete l\u2019azienda paga {costoAcquisto} \u20AC/kWh (tasse ed Iva inclusa) - da confermare\nl\u2019azienda fa una pausa pranzo di (1 h, 1.5 h, 2 h, 2.5 h, 3 h) durante la quale ricarica lo Storage\nla differenza di valore dell\u2019energia nei due casi precedenti risulta essere {costoAcquisto}-{prezzoVendita} = {delta} \u20AC/kWh\nsabato e alla domenica, normalmente, l\u2019azienda non lavora\nconsideriamo uno Storage allo Stato Solido da {capacitaStorage} kWh di capacit\u00e0",
+        txtTaglia: "La capacit\u00e0 di accumulo viene definita per coprire tipicamente:\n15\u201330% del fabbisogno energetico giornaliero, evitando sovradimensionamenti che allungherebbero il payback.\nQuindi, per il cliente {nomeCorto} consideriamo lo Storage da {capacitaStorage} kWh",
+        txtCalcolo: "Considerando la produzione annua di energia stimata in {produzioneAnnua} kWh significa che, mediamente nell\u2019anno (non importa se in estate o in inverno), avremo una produzione giornaliera pari a {mediaGiornaliera} kWh;\nSe dividiamo questa produzione giornaliera per le {oreLuce} h/gg produttive per l\u2019impianto FTV, avremo, in media, {kWhPerOra} kWh prodotti per ogni ora di luce.",
+        txtWeekend: "Vengono considerati solo i sabati o solo le domeniche perch\u00e9 di sabato o di domenica lo storage viene riempito in alcune ore (di solito il sabato) e l\u2019energia accumulata viene utilizzata solo il luned\u00ec successivo, visto che al sabato o alla domenica non sono previsti consumi.",
+        txtPaybackNota: "Considerando il costo indicativo dello Storage da {capacitaStorage} kW pari a {costoStorage} \u20AC (da confermare), riducibile del 43,2 %, grazie all\u2019 Iper-ammortamento previsto dall\u2019ultima legge finanziaria (senza considerare altre misure eventualmente cumulabili quali la Nuova Sabatini o il Conto termico 3.0), abbiamo un costo effettivo pari a {costoEffettivo} \u20AC.",
+        txtAbbreviazione: "il costo dell\u2019energia salir\u00e0 (come \u00e8 molto probabile)\nsi riesce a ridurre i costi energetici con l\u2019arbitraggio (distribuzione dei consumi nelle fasce F1\u2013F2\u2013F3)\nsi riducono o si evitano eventi critici (micro-interruzioni, buchi di tensione) che danneggiano la produzione aziendale",
+        txtContratto: "investimento diretto,\nfinanziamento agevolato,\nE.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.",
+        txtRisultato: "Un sistema di accumulo dimensionato su misura, che massimizza il ritorno economico e garantisce affidabilit\u00e0 operativa nel tempo.",
+      };
+    }
+
+    function resetTesti() {
+      var defaults = getDefaultTesti();
+      for (var id in defaults) { document.getElementById(id).value = defaults[id]; }
+    }
+
+    function sostituisciSegnaposto(testo, vars) {
+      return testo.replace(/\{(\w+)\}/g, function(match, key) { return vars[key] !== undefined ? vars[key] : match; });
+    }
+
+    function init() {
+      document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', aggiornaPreview));
+      aggiornaPreview();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+    function nomeBreve(nome) {
+      return nome.replace(/\s*(srl|spa|snc|sas|srls|s\.r\.l\.|s\.p\.a\.|s\.n\.c\.|s\.a\.s\.)\s*/gi, '').trim();
+    }
+
+    function labelCapacita(val) {
+      if (val === 261) return '261 kWh';
+      if (val === 1000) return '~1 MWh';
+      if (val === 3350) return '3,35 MWh';
+      return fmtNum(val) + ' kWh';
+    }
+
+    function descCapacita(val) {
+      if (val === 261) return 'PMI / carichi contenuti';
+      if (val === 1000) return 'industria standard';
+      if (val === 3350) return 'impianti energivori / multi-turno';
+      return '';
+    }
+
+    function orePausaLabel(val) {
+      if (val === 1) return '1 h';
+      if (val === 1.5) return '1,5 h';
+      if (val === 2) return '2 h';
+      if (val === 2.5) return '2,5 h';
+      if (val === 3) return '3 h';
+      return val.toString().replace('.', ',') + ' h';
+    }
+
+    function oggi() {
+      const d = new Date();
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yy = String(d.getFullYear()).slice(-2);
+      return dd + '/' + mm + '/' + yy;
+    }
+
+    function separator() {
+      return new Paragraph({
+        spacing: { before: 120, after: 120 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: 'A0A0A0', space: 1 } },
+        children: [],
+      });
+    }
+
+    async function generaDocumento() {
+      const inp = getInputs();
+      const c = calcola(inp);
+      const nomeCorto = nomeBreve(inp.nomeAzienda);
+
+      // Mappa segnaposto
+      const vars = {
+        nomeAzienda: inp.nomeAzienda,
+        nomeCorto: nomeCorto,
+        kWp: fmtNum(inp.kWp),
+        produzioneAnnua: fmtNum(c.produzioneAnnua),
+        mediaGiornaliera: fmtNum(c.mediaGiornaliera),
+        oreLuce: inp.oreLuce,
+        energiaImmessa: fmtNum(c.energiaImmessa),
+        prezzoVendita: inp.prezzoVendita.toFixed(2).replace('.', ','),
+        costoAcquisto: inp.costoAcquisto.toFixed(2).replace('.', ','),
+        delta: c.delta.toFixed(2).replace('.', ','),
+        capacitaStorage: fmtNum(inp.capacitaStorage),
+        costoStorage: fmtNum(inp.costoStorage),
+        costoEffettivo: fmtNum(c.costoEffettivo),
+        kWhPerOra: fmtNum(c.kWhPerOra),
+        kWhCalcolati: fmtNum(c.kWhCalcolati),
+        kWhAccPomeriggio: fmtNum(c.kWhAccPomeriggio),
+        orePausaLabel: orePausaLabel(inp.orePausa),
+        risparmioA: fmtNum(c.risparmioA),
+        risparmioB: fmtNum(c.risparmioB),
+        risparmioTotale: fmtNum(c.risparmioTotale),
+        payback: c.payback.toFixed(2).replace('.', ','),
+      };
+
+      function T(id) { return sostituisciSegnaposto(document.getElementById(id).value, vars); }
+      function righe(testo) { return testo.split('\n').filter(function(r) { return r.trim(); }); }
+      function paragrafi(testo, opts) {
+        return righe(testo).map(function(r) {
+          return new Paragraph(Object.assign({ children: [new TextRun({ text: r })] }, opts || {}));
+        });
+      }
+      function bulletList(testo, ref) {
+        return righe(testo).map(function(r) {
+          return new Paragraph({ numbering: { reference: ref, level: 0 }, spacing: { after: 0 }, children: [new TextRun({ text: r })] });
+        });
+      }
+
+      // Testi dalle textarea
+      var premessaRighe = righe(T('txtPremessa'));
+      var tagliaRighe = righe(T('txtTaglia'));
+
+      var children = [];
+
+      // INTESTAZIONE
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: inp.nomeAzienda, size: 32, bold: false, highlight: 'yellow' }),
+          new TextRun({ text: '                                                           ' + oggi(), size: 32 }),
+        ],
+      }));
+      children.push(separator());
+
+      // TITOLO
+      children.push(new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text: 'Valutazione economica sistema di accumulo energetico', bold: true })] }));
+
+      // 1 - PREMESSA
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: '1- Premessa', bold: true })] }));
+      premessaRighe.forEach(function(r) { children.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: r })] })); });
+      children.push(separator());
+
+      // 2 - IPOTESI
+      children.push(new Paragraph({ children: [new TextRun({ text: '2- Ipotesi assunte per fare una valutazione economica sulla convenienza dello Storage', bold: true })] }));
+      bulletList(T('txtIpotesi'), 'ipotesi').forEach(function(p) { children.push(p); });
+      children.push(separator());
+
+      // 3 - SCELTA TAGLIA
+      children.push(new Paragraph({ children: [new TextRun({ text: '3- Scelta della taglia ottimale', bold: true })] }));
+      // Prime righe come paragrafi normali, poi taglie tipiche fisse, poi ultima riga
+      if (tagliaRighe.length >= 1) {
+        children.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: tagliaRighe[0] })] }));
+      }
+      if (tagliaRighe.length >= 2) {
+        children.push(new Paragraph({ numbering: { reference: 'taglie', level: 0 }, spacing: { after: 0 }, children: [new TextRun({ text: tagliaRighe[1] })] }));
+      }
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [] }));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: 'Taglie tipiche:' })] }));
+      children.push(new Paragraph({ numbering: { reference: 'taglie', level: 0 }, spacing: { after: 0 }, children: [new TextRun({ text: '261 kWh \u2192 PMI / carichi contenuti' })] }));
+      children.push(new Paragraph({ numbering: { reference: 'taglie', level: 0 }, spacing: { after: 0 }, children: [new TextRun({ text: '~1 MWh \u2192 industria standard' })] }));
+      children.push(new Paragraph({ numbering: { reference: 'taglie', level: 0 }, spacing: { after: 0 }, children: [new TextRun({ text: '3,35 MWh \u2192 impianti energivori / multi-turno' })] }));
+      if (tagliaRighe.length >= 3) {
+        children.push(new Paragraph({ children: [new TextRun({ text: tagliaRighe[2] })] }));
+      }
+
+      // 4 - CALCOLO kWh
+      children.push(new Paragraph({ children: [new TextRun({ text: '4- Calcolo dei kWh accumulabili nello Storage', bold: true })] }));
+      paragrafi(T('txtCalcolo')).forEach(function(p) { children.push(p); });
+
+      // A) Produzione pomeridiana
+      children.push(new Paragraph({ children: [] }));
+      children.push(new Paragraph({
+        spacing: { after: 0 }, indent: { left: 720 },
+        children: [
+          new TextRun({ text: 'L\u2019energia eccedente prodotta nel pomeriggio carichera\u0300 lo Storage di: ' + vars.kWhPerOra + ' kWh x ' }),
+          new TextRun({ text: vars.orePausaLabel, highlight: 'yellow' }),
+          new TextRun({ text: '= ' + vars.kWhCalcolati + ' kWh' + (c.superaCap ? ' (questo dato \u00e8 maggiore della capacit\u00e0 dello storage, quindi lo limitiamo a ' + vars.capacitaStorage + ' kWh).' : '.') }),
+        ],
+      }));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [
+        new TextRun({ text: 'Il valore da considerare dei kWh della produzione pomeridiana = ' + vars.costoAcquisto + ' \u20AC/kWh \u2013 ' + vars.prezzoVendita + ' \u20AC/kWh = ' + vars.delta + ' \u20AC/kWh' }),
+      ]}));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [
+        new TextRun({ text: 'Quindi: ' + vars.kWhAccPomeriggio + ' kWh x ' + vars.delta + ' \u20AC/kWh x 5 gg/settimana x 52 settimane/anno = ' }),
+        new TextRun({ text: vars.risparmioA + ' \u20AC/anno', bold: true }),
+      ]}));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: ' ' })] }));
+
+      // B) Sabati/Domeniche
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: ' B)  Produzione dei Sabati o delle Domeniche' })] }));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [
+        new TextRun({ text: vars.capacitaStorage + ' kWh (accumulabili nello storage) x ' + vars.delta + ' \u20AC/kWh x 52 soli sabati o sole domeniche/anno = ' }),
+        new TextRun({ text: vars.risparmioB + ' \u20AC/anno', bold: true }),
+      ]}));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [] }));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: T('txtWeekend') })] }));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [] }));
+
+      // TOTALE
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [
+        new TextRun({ text: 'La somma degli importi mostrati ai punti A) e B) = ' }),
+        new TextRun({ text: vars.risparmioA + ' \u20AC/anno + ' + vars.risparmioB + ' \u20AC/anno = ' + vars.risparmioTotale + ' \u20AC/anno ', bold: true }),
+      ]}));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [
+        new TextRun({ text: 'Questa cifra indica quanto risparmiamo all\u2019anno utilizzando l\u2019energia quando ci costerebbe ' + vars.costoAcquisto + ' \u20AC/kWh invece di venderla in rete a ' + vars.prezzoVendita + ' \u20AC/kWh' }),
+      ]}));
+      children.push(new Paragraph({ children: [] }));
+
+      // PAYBACK
+      children.push(new Paragraph({ children: [new TextRun({ text: T('txtPaybackNota') })] }));
+      children.push(new Paragraph({ children: [
+        new TextRun({ text: 'Questa cifra viene ammortizzata in: ' + vars.costoEffettivo + ' \u20AC / ' + vars.risparmioTotale + ' \u20AC/anno = ' + vars.payback + ' anni.', bold: true }),
+      ]}));
+
+      // ABBREVIAZIONE PAYBACK
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: 'Questo periodo potr\u00e0 abbreviarsi se: ' })] }));
+      bulletList(T('txtAbbreviazione'), 'abbrevia').forEach(function(p) { children.push(p); });
+      children.push(separator());
+
+      // 5 - STRUTTURA CONTRATTUALE
+      children.push(new Paragraph({ children: [new TextRun({ text: '5- Struttura contrattuale', bold: true })] }));
+      children.push(new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: 'L\u2019intervento pu\u00f2 essere realizzato tramite:' })] }));
+      bulletList(T('txtContratto'), 'contratto').forEach(function(p) { children.push(p); });
+      children.push(separator());
+
+      // RISULTATO
+      children.push(new Paragraph({ children: [new TextRun({ text: 'Risultato', bold: true })] }));
+      children.push(new Paragraph({ children: [new TextRun({ text: T('txtRisultato') })] }));
+
+      const doc = new Document({
+        numbering: {
+          config: [
+            { reference: 'ipotesi', levels: [{ level: 0, format: LevelFormat.BULLET, text: '\u2022', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] },
+            { reference: 'taglie', levels: [{ level: 0, format: LevelFormat.BULLET, text: '\u2022', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] },
+            { reference: 'abbrevia', levels: [{ level: 0, format: LevelFormat.BULLET, text: '\u2022', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] },
+            { reference: 'contratto', levels: [{ level: 0, format: LevelFormat.BULLET, text: '\u2022', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] },
+          ],
+        },
+        sections: [{
+          properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+          children: children,
+        }],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Valutazione economica Storage - ' + inp.nomeAzienda + '.docx';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
