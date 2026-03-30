@@ -96,7 +96,7 @@
       </div>
       <div class="kpi purple" style="position:relative;">
         <div class="icon">&#127793;</div>
-        <div class="label">CO2 evitata/anno <span class="info-btn" onclick="toggleInfo(event)" title="Metodologia di stima">&#9432;</span></div>
+        <div class="label">CO2 evitata/anno <span class="info-btn" title="Clicca per la metodologia di stima">&#9432;</span></div>
         <div class="value" id="kpiCO2">-</div>
         <div class="sub" id="kpiCO2sub">Equivalente a piantare alberi</div>
         <div class="info-box" id="infoBox">
@@ -155,17 +155,6 @@
   </div>
 
   <script>
-    function toggleInfo(e) {
-      e.stopPropagation();
-      var box = document.getElementById('infoBox');
-      box.classList.toggle('show');
-    }
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('.info-box')) {
-        document.getElementById('infoBox').classList.remove('show');
-      }
-    });
-
     // Leggi parametri da URL
     var params = new URLSearchParams(window.location.search);
     var D = {
@@ -359,6 +348,31 @@
       tr.innerHTML = '<td>' + r[0] + '</td><td class="val' + (r[2] ? ' green' : '') + '">' + r[1] + '</td>';
       tbody.appendChild(tr);
     });
+
+    // Info popup CO2
+    (function() {
+      var btn = document.querySelector('.info-btn');
+      var box = document.getElementById('infoBox');
+      if (!btn || !box) return;
+      var justOpened = false;
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (box.classList.contains('show')) {
+          box.classList.remove('show');
+        } else {
+          box.classList.add('show');
+          justOpened = true;
+          setTimeout(function() { justOpened = false; }, 100);
+        }
+      });
+      document.addEventListener('click', function(e) {
+        if (justOpened) return;
+        if (!box.contains(e.target)) {
+          box.classList.remove('show');
+        }
+      });
+    })();
   </script>
 </body>
 </html>
