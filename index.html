@@ -234,6 +234,52 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
         </div>
 
         <button class="btn-reset" onclick="resetTesti()">Ripristina testi predefiniti</button>
+
+        <hr style="margin:24px 0 16px; border:none; border-top:2px solid #1a7a3a; opacity:0.3;">
+        <h3 style="color:#1a7a3a; font-size:1rem; margin-bottom:12px;">Testi Proposta Commerciale</h3>
+
+        <div class="text-group">
+          <label>1. Il contesto</label>
+          <textarea id="txtPropContesto" rows="4">La Vostra azienda dispone già di un impianto fotovoltaico da {kWp} kWp, con una produzione annua stimata di circa {produzioneAnnua} kWh.
+Attualmente, circa il 25% di questa energia ({energiaImmessa} kWh/anno) non viene consumata e viene immessa in rete a un prezzo di {prezzoVendita} €/kWh, ben al di sotto del costo di acquisto dalla rete di {costoAcquisto} €/kWh.
+Questo significa che la Vostra azienda perde {delta} € per ogni kWh di energia prodotta e non utilizzata. Un sistema di accumulo permette di recuperare questa differenza, trasformando un costo nascosto in un risparmio concreto.</textarea>
+          <div class="hint">Segnaposto: {kWp}, {produzioneAnnua}, {energiaImmessa}, {prezzoVendita}, {costoAcquisto}, {delta}</div>
+        </div>
+
+        <div class="text-group">
+          <label>2. La soluzione proposta (intro)</label>
+          <textarea id="txtPropSoluzione" rows="2">Proponiamo l'installazione di un sistema di accumulo allo stato solido da {capacitaStorage} kWh, dimensionato su misura per il Vostro profilo di consumo.
+Il sistema opera in due modalità complementari:</textarea>
+          <div class="hint">Segnaposto: {capacitaStorage}</div>
+        </div>
+
+        <div class="text-group">
+          <label>Nota weekend (proposta)</label>
+          <textarea id="txtPropWeekend" rows="2">Il sabato, con l'azienda ferma, lo storage si ricarica completamente ({capacitaStorage} kWh) e l'energia accumulata viene utilizzata il lunedì mattina, evitando l'acquisto dalla rete nelle prime ore della settimana.</textarea>
+          <div class="hint">Segnaposto: {capacitaStorage}</div>
+        </div>
+
+        <div class="text-group">
+          <label>4. Perché conviene agire ora (una per riga, punti elenco)</label>
+          <textarea id="txtPropPerche" rows="4">l'aumento atteso del costo dell'energia, che amplifica il valore del risparmio
+la possibilità di ottimizzare i costi con l'arbitraggio tra fasce orarie (F1–F2–F3)
+la protezione da micro-interruzioni e buchi di tensione, che possono causare danni alla produzione ben superiori al costo dell'energia
+la possibilità di cumulare ulteriori incentivi (Nuova Sabatini, Conto Termico 3.0)</textarea>
+        </div>
+
+        <div class="text-group">
+          <label>5. Modalità di realizzazione (una per riga, punti elenco)</label>
+          <textarea id="txtPropModalita" rows="3">Investimento diretto — massimo risparmio nel lungo periodo
+Finanziamento agevolato — rate compatibili con il risparmio generato
+E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remunerazione legata ai risparmi effettivi</textarea>
+        </div>
+
+        <div class="text-group">
+          <label>Chiusura (proposta)</label>
+          <textarea id="txtPropChiusura" rows="2">Un sistema di accumulo dimensionato su misura: massimo ritorno economico, affidabilità operativa nel tempo e un passo concreto verso l'indipendenza energetica della Vostra azienda.</textarea>
+        </div>
+
+        <button class="btn-reset" onclick="resetTesti()">Ripristina testi predefiniti</button>
       </div>
     </div>
 
@@ -313,6 +359,12 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
         txtAbbreviazione: "il costo dell\u2019energia salir\u00e0 (come \u00e8 molto probabile)\nsi riesce a ridurre i costi energetici con l\u2019arbitraggio (distribuzione dei consumi nelle fasce F1\u2013F2\u2013F3)\nsi riducono o si evitano eventi critici (micro-interruzioni, buchi di tensione) che danneggiano la produzione aziendale",
         txtContratto: "investimento diretto,\nfinanziamento agevolato,\nE.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.",
         txtRisultato: "Un sistema di accumulo dimensionato su misura, che massimizza il ritorno economico e garantisce affidabilit\u00e0 operativa nel tempo.",
+        txtPropContesto: "La Vostra azienda dispone gi\u00e0 di un impianto fotovoltaico da {kWp} kWp, con una produzione annua stimata di circa {produzioneAnnua} kWh.\nAttualmente, circa il 25% di questa energia ({energiaImmessa} kWh/anno) non viene consumata e viene immessa in rete a un prezzo di {prezzoVendita} \u20AC/kWh, ben al di sotto del costo di acquisto dalla rete di {costoAcquisto} \u20AC/kWh.\nQuesto significa che la Vostra azienda perde {delta} \u20AC per ogni kWh di energia prodotta e non utilizzata. Un sistema di accumulo permette di recuperare questa differenza, trasformando un costo nascosto in un risparmio concreto.",
+        txtPropSoluzione: "Proponiamo l\u2019installazione di un sistema di accumulo allo stato solido da {capacitaStorage} kWh, dimensionato su misura per il Vostro profilo di consumo.\nIl sistema opera in due modalit\u00e0 complementari:",
+        txtPropWeekend: "Il sabato, con l\u2019azienda ferma, lo storage si ricarica completamente ({capacitaStorage} kWh) e l\u2019energia accumulata viene utilizzata il luned\u00ec mattina, evitando l\u2019acquisto dalla rete nelle prime ore della settimana.",
+        txtPropPerche: "l\u2019aumento atteso del costo dell\u2019energia, che amplifica il valore del risparmio\nla possibilit\u00e0 di ottimizzare i costi con l\u2019arbitraggio tra fasce orarie (F1\u2013F2\u2013F3)\nla protezione da micro-interruzioni e buchi di tensione, che possono causare danni alla produzione ben superiori al costo dell\u2019energia\nla possibilit\u00e0 di cumulare ulteriori incentivi (Nuova Sabatini, Conto Termico 3.0)",
+        txtPropModalita: "Investimento diretto \u2014 massimo risparmio nel lungo periodo\nFinanziamento agevolato \u2014 rate compatibili con il risparmio generato\nE.P.C. (Energy Performance Contract) \u2014 nessun investimento iniziale, remunerazione legata ai risparmi effettivi",
+        txtPropChiusura: "Un sistema di accumulo dimensionato su misura: massimo ritorno economico, affidabilit\u00e0 operativa nel tempo e un passo concreto verso l\u2019indipendenza energetica della Vostra azienda.",
       };
     }
 
@@ -686,6 +738,23 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       const nomeCorto = nomeBreve(inp.nomeAzienda);
       const logoCliente = await getLogoCliente();
 
+      // Mappa segnaposto per textarea
+      const vars = {
+        nomeAzienda: inp.nomeAzienda, nomeCorto: nomeCorto,
+        kWp: fmtNum(inp.kWp), produzioneAnnua: fmtNum(c.produzioneAnnua),
+        mediaGiornaliera: fmtNum(c.mediaGiornaliera), oreLuce: inp.oreLuce,
+        energiaImmessa: fmtNum(c.energiaImmessa),
+        prezzoVendita: inp.prezzoVendita.toFixed(2).replace('.', ','),
+        costoAcquisto: inp.costoAcquisto.toFixed(2).replace('.', ','),
+        delta: c.delta.toFixed(2).replace('.', ','),
+        capacitaStorage: fmtNum(inp.capacitaStorage),
+        costoStorage: fmtNum(inp.costoStorage), costoEffettivo: fmtNum(c.costoEffettivo),
+        kWhPerOra: fmtNum(c.kWhPerOra), kWhCalcolati: fmtNum(c.kWhCalcolati),
+        kWhAccPomeriggio: fmtNum(c.kWhAccPomeriggio), orePausaLabel: orePausaLabel(inp.orePausa),
+        risparmioA: fmtNum(c.risparmioA), risparmioB: fmtNum(c.risparmioB),
+        risparmioTotale: fmtNum(c.risparmioTotale), payback: c.payback.toFixed(2).replace('.', ','),
+      };
+
       const border = { style: BorderStyle.SINGLE, size: 1, color: 'D0D0D0' };
       const borders = { top: border, bottom: border, left: border, right: border };
       const noBorders = { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } };
@@ -706,6 +775,9 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
         return new Paragraph({ numbering: { reference: ref || 'comm_bullets', level: 0 }, spacing: { after: 80, line: 276 }, children: [new TextRun({ text: text, size: 22, font: 'Calibri' })] });
       }
       function emptyLine() { return new Paragraph({ spacing: { after: 60 }, children: [] }); }
+      // Helpers per leggere textarea proposta con segnaposto
+      function TP(id) { return sostituisciSegnaposto(document.getElementById(id).value, vars).split('\n').filter(function(r) { return r.trim(); }); }
+      function righeP(id) { return TP(id); }
 
       function kvRow(label, value, highlight) {
         return new TableRow({
@@ -764,30 +836,24 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
       }));
       ch.push(emptyLine());
 
-      // === 1. IL CONTESTO ===
+      // === 1. IL CONTESTO === (da textarea)
       ch.push(heading('1. Il contesto'));
-      ch.push(body('La Vostra azienda dispone gi\u00e0 di un impianto fotovoltaico da ' + fmtNum(inp.kWp) + ' kWp, con una produzione annua stimata di circa ' + fmtNum(c.produzioneAnnua) + ' kWh.'));
-      ch.push(body('Attualmente, circa il 25% di questa energia (' + fmtNum(c.energiaImmessa) + ' kWh/anno) non viene consumata e viene immessa in rete a un prezzo di ' + inp.prezzoVendita.toFixed(2).replace('.', ',') + ' \u20AC/kWh, ben al di sotto del costo di acquisto dalla rete di ' + inp.costoAcquisto.toFixed(2).replace('.', ',') + ' \u20AC/kWh.'));
-      ch.push(bodyMixed([
-        new TextRun({ text: 'Questo significa che la Vostra azienda perde ', size: 22, font: 'Calibri' }),
-        new TextRun({ text: c.delta.toFixed(2).replace('.', ',') + ' \u20AC per ogni kWh', bold: true, size: 22, font: 'Calibri' }),
-        new TextRun({ text: ' di energia prodotta e non utilizzata. Un sistema di accumulo permette di recuperare questa differenza, trasformando un costo nascosto in un risparmio concreto.', size: 22, font: 'Calibri' }),
-      ]));
+      TP('txtPropContesto').forEach(function(r) { ch.push(body(r)); });
 
-      // === 2. LA SOLUZIONE ===
+      // === 2. LA SOLUZIONE === (intro da textarea)
       ch.push(heading('2. La soluzione proposta'));
-      ch.push(body('Proponiamo l\u2019installazione di un sistema di accumulo allo stato solido da ' + fmtNum(inp.capacitaStorage) + ' kWh, dimensionato su misura per il Vostro profilo di consumo.'));
-      ch.push(body('Il sistema opera in due modalit\u00e0 complementari:'));
+      TP('txtPropSoluzione').forEach(function(r) { ch.push(body(r)); });
       ch.push(emptyLine());
       ch.push(bodyMixed([
         new TextRun({ text: 'A) Accumulo durante la pausa pranzo', bold: true, size: 22, font: 'Calibri' }),
       ]));
-      ch.push(body('Durante la pausa di ' + orePausaLabel(inp.orePausa) + ', quando la produzione dell\u2019impianto supera i consumi, lo storage accumula fino a ' + fmtNum(c.kWhAccPomeriggio) + ' kWh che vengono restituiti nelle ore di maggior fabbisogno.' + (c.superaCap ? ' (Il calcolo teorico porterebbe a ' + fmtNum(c.kWhCalcolati) + ' kWh, ma viene naturalmente limitato dalla capacit\u00e0 dello storage.)' : '')));
+      ch.push(body('Durante la pausa di ' + vars.orePausaLabel + ', quando la produzione dell\u2019impianto supera i consumi, lo storage accumula fino a ' + vars.kWhAccPomeriggio + ' kWh che vengono restituiti nelle ore di maggior fabbisogno.' + (c.superaCap ? ' (Il calcolo teorico porterebbe a ' + vars.kWhCalcolati + ' kWh, ma viene naturalmente limitato dalla capacit\u00e0 dello storage.)' : '')));
       ch.push(emptyLine());
       ch.push(bodyMixed([
         new TextRun({ text: 'B) Accumulo nei weekend', bold: true, size: 22, font: 'Calibri' }),
       ]));
-      ch.push(body('Il sabato, con l\u2019azienda ferma, lo storage si ricarica completamente (' + fmtNum(inp.capacitaStorage) + ' kWh) e l\u2019energia accumulata viene utilizzata il luned\u00ec mattina, evitando l\u2019acquisto dalla rete nelle prime ore della settimana.'));
+      // Nota weekend da textarea
+      TP('txtPropWeekend').forEach(function(r) { ch.push(body(r)); });
 
       // === 3. I NUMERI ===
       ch.push(heading('3. Il ritorno economico'));
@@ -818,29 +884,25 @@ E.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.</text
         new TextRun({ text: ', dopo i quali il risparmio di ' + fmtNum(c.risparmioTotale) + ' \u20AC/anno diventa puro guadagno per la Vostra azienda.', size: 22, font: 'Calibri' }),
       ]));
 
-      // === 4. PERCHE\u0300 CONVIENE ===
+      // === 4. PERCHE CONVIENE === (da textarea)
       ch.push(heading('4. Perch\u00e9 conviene agire ora'));
       ch.push(body('Il tempo di ritorno calcolato \u00e8 gi\u00e0 molto favorevole, ma potr\u00e0 migliorare ulteriormente grazie a:'));
-      ch.push(bullet('l\u2019aumento atteso del costo dell\u2019energia, che amplifica il valore del risparmio', 'comm_bullets'));
-      ch.push(bullet('la possibilit\u00e0 di ottimizzare i costi con l\u2019arbitraggio tra fasce orarie (F1\u2013F2\u2013F3)', 'comm_bullets'));
-      ch.push(bullet('la protezione da micro-interruzioni e buchi di tensione, che possono causare danni alla produzione ben superiori al costo dell\u2019energia', 'comm_bullets'));
-      ch.push(bullet('la possibilit\u00e0 di cumulare ulteriori incentivi (Nuova Sabatini, Conto Termico 3.0)', 'comm_bullets'));
+      righeP('txtPropPerche').forEach(function(r) { ch.push(bullet(r, 'comm_bullets')); });
 
-      // === 5. MODALITA\u0300 ===
+      // === 5. MODALITA === (da textarea)
       ch.push(heading('5. Modalit\u00e0 di realizzazione'));
       ch.push(body('L\u2019intervento pu\u00f2 essere realizzato secondo la formula pi\u00f9 adatta alle Vostre esigenze:'));
-      ch.push(bullet('Investimento diretto \u2014 massimo risparmio nel lungo periodo', 'comm_bullets2'));
-      ch.push(bullet('Finanziamento agevolato \u2014 rate compatibili con il risparmio generato', 'comm_bullets2'));
-      ch.push(bullet('E.P.C. (Energy Performance Contract) \u2014 nessun investimento iniziale, remunerazione legata ai risparmi effettivi', 'comm_bullets2'));
+      righeP('txtPropModalita').forEach(function(r) { ch.push(bullet(r, 'comm_bullets2')); });
 
-      // === CHIUSURA ===
+      // === CHIUSURA === (da textarea)
       ch.push(new Paragraph({
         spacing: { before: 300, after: 200 },
         border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: '2E75B6', space: 1 } },
         children: [],
       }));
+      var chiusuraText = sostituisciSegnaposto(document.getElementById('txtPropChiusura').value, vars);
       ch.push(bodyMixed([
-        new TextRun({ text: 'Un sistema di accumulo dimensionato su misura: massimo ritorno economico, affidabilit\u00e0 operativa nel tempo e un passo concreto verso l\u2019indipendenza energetica della Vostra azienda.', bold: true, size: 22, font: 'Calibri', color: '1A3A5C' }),
+        new TextRun({ text: chiusuraText, bold: true, size: 22, font: 'Calibri', color: '1A3A5C' }),
       ]));
 
       const doc = new Document({
