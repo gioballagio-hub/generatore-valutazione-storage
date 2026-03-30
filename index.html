@@ -927,6 +927,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       TP('txtPropWeekend').forEach(function(r) { ch.push(body(r)); });
 
       // === 3. I NUMERI ===
+      ch.push(new Paragraph({ children: [new PageBreak()] }));
       ch.push(heading('3. Il ritorno economico'));
       ch.push(body('Ecco i numeri della Vostra convenienza:'));
       ch.push(emptyLine());
