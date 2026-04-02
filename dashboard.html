@@ -212,7 +212,7 @@
       <div class="co-icon">&#9888;</div>
       <div class="co-body">
         <div class="co-title">Costo opportunit&agrave;</div>
-        <div class="co-text">Ogni mese senza lo storage, la Vostra azienda perde circa <strong id="coMensile">-</strong> di risparmio potenziale.</div>
+        <div class="co-text" id="coTesto"></div>
         <div class="co-sub" id="coDettaglio"></div>
       </div>
     </div>
@@ -506,15 +506,16 @@
       });
 
       // Costo opportunità mensile
-      var coMensileAnno1 = Math.round(c.rispAnno1 / 12);
+      var coMensile = Math.round(c.rispAnno1 / 12);
+      var coTesto = document.getElementById('coTesto');
+      var coDett = document.getElementById('coDettaglio');
       if (aumentoPct > 0) {
-        var coMensileMedio = Math.round(c.rispMedioAnnuo / 12);
-        var coPerso10anni = Math.round(c.risparmiAnno.reduce(function(a,b){return a+b;},0));
-        document.getElementById('coMensile').textContent = fmt(coMensileAnno1) + ' \u20AC \u2192 ' + fmt(Math.round(c.rispAnno10 / 12)) + ' \u20AC/mese';
-        document.getElementById('coDettaglio').textContent = 'Oggi perdi ' + fmt(coMensileAnno1) + ' \u20AC/mese, ma con l\u2019aumento del ' + aumentoPct.toFixed(1).replace('.',',') + '% annuo tra 10 anni perderai ' + fmt(Math.round(c.rispAnno10 / 12)) + ' \u20AC/mese. In totale, in 10 anni di attesa perderesti ' + fmt(coPerso10anni) + ' \u20AC di risparmio.';
+        var coPerso10 = Math.round(c.risparmiAnno.reduce(function(a,b){return a+b;},0));
+        coTesto.innerHTML = 'Senza lo storage, oggi state perdendo <strong>' + fmt(coMensile) + ' \u20AC al mese</strong>. Con il costo dell\u2019energia in crescita del ' + aumentoPct.toFixed(1).replace('.',',') + '% annuo, tra 10 anni saranno <strong>' + fmt(Math.round(c.rispAnno10 / 12)) + ' \u20AC al mese</strong>.';
+        coDett.textContent = 'Totale perso nei prossimi 10 anni senza intervenire: ' + fmt(coPerso10) + ' \u20AC.';
       } else {
-        document.getElementById('coMensile').textContent = fmt(coMensileAnno1) + ' \u20AC';
-        document.getElementById('coDettaglio').textContent = 'Pari a ' + fmt(c.rispAnno1) + ' \u20AC/anno di risparmio non realizzato, ovvero ' + fmt(Math.round(c.rispAnno1 / 52)) + ' \u20AC a settimana.';
+        coTesto.innerHTML = 'Senza lo storage, la Vostra azienda sta perdendo <strong>' + fmt(coMensile) + ' \u20AC al mese</strong> di risparmio potenziale.';
+        coDett.textContent = 'Equivalenti a ' + fmt(c.rispAnno1) + ' \u20AC/anno, ovvero circa ' + fmt(Math.round(c.rispAnno1 / 52)) + ' \u20AC a settimana.';
       }
     }
 
