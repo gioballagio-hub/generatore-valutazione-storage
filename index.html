@@ -454,13 +454,103 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
     function fmtNum(n) { return n.toLocaleString('it-IT'); }
     function fmtEur(n) { return fmtNum(n) + ' \u20AC'; }
 
+    // === ALGORITMO GENETICO per ottimizzazione storage ===
+    function valutaCromosoma(gene, kWhPausa, delta) {
+      var capTot = 0, costoTot = 0, righe = [];
+      for (var i = 0; i < CAPACITA_OPTIONS.length; i++) {
+        if (gene[i] > 0) {
+          var cap = CAPACITA_OPTIONS[i];
+          capTot += cap * gene[i];
+          costoTot += LISTINO[cap] * gene[i];
+          righe.push({ capacita: cap, quantita: gene[i], prezzoUnitario: LISTINO[cap] });
+        }
+      }
+      if (capTot === 0 || costoTot === 0) return null;
+      var kWhAcc = Math.min(kWhPausa, capTot);
+      var rispA = Math.floor(kWhAcc * delta * 5 * 52);
+      var rispB = Math.floor(capTot * delta * 52);
+      var rispTot = rispA + rispB;
+      if (rispTot <= 0) return null;
+      var costoEff = Math.floor(costoTot * (1 - 0.672));
+      var pb = costoEff / rispTot;
+      var roi10 = rispTot * 10 - costoEff;
+      return { gene: gene.slice(), righe: righe, capTot: capTot, costoTot: costoTot, costoEff: costoEff, rispTot: rispTot, payback: pb, roi10: roi10 };
+    }
+
+    function gaOttimizza(kWhPausa, delta, fitnessFn) {
+      var N = CAPACITA_OPTIONS.length; // 9 taglie
+      var POP = 150, GEN = 60, ELITE = 10, MUTRATE = 0.3;
+      // Max quantità per taglia (limita lo spazio)
+      var maxQty = CAPACITA_OPTIONS.map(function(c) { return c >= 1000 ? 3 : 10; });
+
+      // Crea individuo random
+      function randGene() {
+        var g = [];
+        for (var i = 0; i < N; i++) g.push(Math.floor(Math.random() * (maxQty[i] + 1)));
+        return g;
+      }
+
+      // Inizializza popolazione
+      var pop = [];
+      for (var i = 0; i < POP; i++) pop.push(randGene());
+      // Aggiungi soluzioni "ovvie" (ogni singola taglia × 1-5)
+      CAPACITA_OPTIONS.forEach(function(_, idx) {
+        for (var q = 1; q <= 5; q++) {
+          var g = new Array(N).fill(0);
+          g[idx] = q;
+          pop.push(g);
+        }
+      });
+
+      var miglior = null;
+
+      for (var gen = 0; gen < GEN; gen++) {
+        // Valuta fitness
+        var scored = [];
+        pop.forEach(function(gene) {
+          var r = valutaCromosoma(gene, kWhPausa, delta);
+          if (r) {
+            r.fitness = fitnessFn(r);
+            scored.push(r);
+            if (!miglior || r.fitness > miglior.fitness) miglior = r;
+          }
+        });
+
+        if (scored.length < 2) break;
+        scored.sort(function(a, b) { return b.fitness - a.fitness; });
+
+        // Nuova popolazione
+        var newPop = [];
+        // Elite
+        for (var e = 0; e < Math.min(ELITE, scored.length); e++) newPop.push(scored[e].gene.slice());
+
+        // Crossover + mutazione
+        while (newPop.length < POP) {
+          // Tournament selection
+          var a = scored[Math.floor(Math.random() * Math.min(30, scored.length))];
+          var b = scored[Math.floor(Math.random() * Math.min(30, scored.length))];
+          var child = [];
+          for (var j = 0; j < N; j++) {
+            child.push(Math.random() < 0.5 ? a.gene[j] : b.gene[j]);
+          }
+          // Mutazione
+          if (Math.random() < MUTRATE) {
+            var idx = Math.floor(Math.random() * N);
+            child[idx] = Math.floor(Math.random() * (maxQty[idx] + 1));
+          }
+          newPop.push(child);
+        }
+        pop = newPop;
+      }
+      return miglior;
+    }
+
     function calcolaSuggerimento() {
       var kWp = parseFloat(document.getElementById('potenzaFTV').value) || 0;
       var pv = parseFloat(document.getElementById('prezzoVendita').value) || 0;
       var ca = parseFloat(document.getElementById('costoAcquisto').value) || 0;
       var op = parseFloat(document.getElementById('orePausa').value) || 0;
       var ol = parseFloat(document.getElementById('oreLuce').value) || 7;
-      var pnc = parseFloat(document.getElementById('pctNonConsumata').value) || 25;
       if (!kWp || !ca || !pv) { document.getElementById('suggerimento').style.display = 'none'; return; }
 
       var prodAnnua = kWp * 1200;
@@ -468,52 +558,41 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       var kWhPerOra = Math.round(mediaGG / ol);
       var delta = ca - pv;
       if (delta <= 0) { document.getElementById('suggerimento').style.display = 'none'; return; }
-
-      // Energia accumulabile max durante la pausa
       var kWhPausa = Math.round(kWhPerOra * op);
 
-      var migliorePayback = null;
-      var miglioreROI = null;
-
-      // Prova ogni taglia singola, da 1 a 10 unità
-      CAPACITA_OPTIONS.forEach(function(cap) {
-        var prezzo = LISTINO[cap];
-        for (var n = 1; n <= 10; n++) {
-          var capTot = cap * n;
-          var costoTot = prezzo * n;
-          var kWhAcc = Math.min(kWhPausa, capTot);
-          var rispA = Math.floor(kWhAcc * delta * 5 * 52);
-          var rispB = Math.floor(capTot * delta * 52);
-          var rispTot = rispA + rispB;
-          var costoEff = Math.floor(costoTot * (1 - 0.672));
-          if (rispTot <= 0) continue;
-          var pb = costoEff / rispTot;
-          var roi10 = rispTot * 10 - costoEff;
-
-          if (!migliorePayback || pb < migliorePayback.payback) {
-            migliorePayback = { cap: cap, n: n, capTot: capTot, costoTot: costoTot, costoEff: costoEff, rispTot: rispTot, payback: pb, roi10: roi10 };
-          }
-          if (!miglioreROI || roi10 > miglioreROI.roi10) {
-            miglioreROI = { cap: cap, n: n, capTot: capTot, costoTot: costoTot, costoEff: costoEff, rispTot: rispTot, payback: pb, roi10: roi10 };
-          }
-        }
+      // GA per payback minimo — a parità di payback (±5%), preferisce ROI più alto
+      var bestPayback = gaOttimizza(kWhPausa, delta, function(r) {
+        return -Math.round(r.payback * 20) * 10000000 + r.roi10;
+      });
+      // GA per ROI massimo — a parità di ROI (±1%), preferisce payback più basso
+      var bestROI = gaOttimizza(kWhPausa, delta, function(r) {
+        return r.roi10 * 1000 - Math.round(r.payback * 100);
       });
 
-      if (!migliorePayback) { document.getElementById('suggerimento').style.display = 'none'; return; }
+      if (!bestPayback && !bestROI) { document.getElementById('suggerimento').style.display = 'none'; return; }
 
-      function descConf(c) {
-        return (c.n > 1 ? c.n + ' x ' + fmtNum(c.cap) + ' kWh' : fmtNum(c.cap) + ' kWh') +
-          ' (' + fmtNum(c.capTot) + ' kWh totali) — Payback: ' + c.payback.toFixed(1).replace('.',',') + ' anni, ROI 10 anni: +' + fmtNum(c.roi10) + ' \u20AC';
+      function descConf(sol) {
+        var parti = sol.righe.map(function(r) {
+          return r.quantita + ' x ' + fmtNum(r.capacita) + ' kWh';
+        });
+        return parti.join(' + ') + ' (' + fmtNum(sol.capTot) + ' kWh totali) \u2014 Payback: ' + sol.payback.toFixed(2).replace('.',',') + ' anni, ROI 10 anni: +' + fmtNum(sol.roi10) + ' \u20AC';
       }
 
-      function btnApplica(cap, n) {
-        return ' <button type="button" onclick="applicaSuggerimento(' + cap + ',' + n + ')" style="padding:3px 10px;font-size:0.78rem;background:#2e75b6;color:#fff;border:none;border-radius:4px;cursor:pointer;">Applica</button>';
+      function btnApplica(sol) {
+        var data = encodeURIComponent(JSON.stringify(sol.righe));
+        return ' <button type="button" onclick="applicaSuggerimentoGA(\'' + data + '\')" style="padding:3px 10px;font-size:0.78rem;background:#2e75b6;color:#fff;border:none;border-radius:4px;cursor:pointer;">Applica</button>';
       }
 
-      var html1 = '<strong>Payback minimo:</strong> ' + descConf(migliorePayback) + btnApplica(migliorePayback.cap, migliorePayback.n);
+      var html1 = bestPayback ? '<strong>Payback minimo:</strong> ' + descConf(bestPayback) + btnApplica(bestPayback) : '';
       var html2 = '';
-      if (miglioreROI.cap !== migliorePayback.cap || miglioreROI.n !== migliorePayback.n) {
-        html2 = '<strong>ROI massimo:</strong> ' + descConf(miglioreROI) + btnApplica(miglioreROI.cap, miglioreROI.n);
+      if (bestROI && bestPayback) {
+        // Mostra ROI solo se diverso da payback
+        var stessoGene = bestROI.gene.join(',') === bestPayback.gene.join(',');
+        if (!stessoGene) {
+          html2 = '<strong>ROI massimo:</strong> ' + descConf(bestROI) + btnApplica(bestROI);
+        }
+      } else if (bestROI) {
+        html1 = '<strong>ROI massimo:</strong> ' + descConf(bestROI) + btnApplica(bestROI);
       }
 
       document.getElementById('suggPayback').innerHTML = html1;
@@ -521,10 +600,10 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       document.getElementById('suggerimento').style.display = 'block';
     }
 
-    function applicaSuggerimento(cap, n) {
-      // Svuota tabella e metti la configurazione suggerita
+    function applicaSuggerimentoGA(dataStr) {
+      var righe = JSON.parse(decodeURIComponent(dataStr));
       document.getElementById('storageBody').innerHTML = '';
-      aggiungiRigaStorage(cap, n);
+      righe.forEach(function(r) { aggiungiRigaStorage(r.capacita, r.quantita, r.prezzoUnitario); });
     }
 
     function aggiornaPreview() {
