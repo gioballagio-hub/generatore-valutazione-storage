@@ -59,6 +59,12 @@
     .scenario-value { font-size: 1.4rem; font-weight: 800; color: #a78bfa; min-width: 60px; text-align: center; }
     .scenario-note { color: #64748b; font-size: 0.8rem; margin-top: 8px; }
 
+    .costo-opportunita { display: flex; align-items: center; gap: 16px; background: linear-gradient(135deg, #451a03, #78350f); border: 1px solid #f59e0b; border-radius: 16px; padding: 20px 24px; margin-top: 24px; }
+    .co-icon { font-size: 2.2rem; opacity: 0.9; }
+    .co-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #fbbf24; margin-bottom: 6px; font-weight: 600; }
+    .co-text { font-size: 1.05rem; color: #fef3c7; line-height: 1.5; }
+    .co-text strong { color: #fbbf24; font-size: 1.3rem; }
+    .co-sub { font-size: 0.82rem; color: #d97706; margin-top: 6px; }
     .powered { text-align: center; color: #475569; font-size: 0.75rem; margin-top: 32px; padding-bottom: 16px; }
 
     @media (max-width: 768px) {
@@ -199,6 +205,16 @@
         <thead><tr><th>Parametro</th><th style="text-align:right">Valore</th></tr></thead>
         <tbody id="summaryBody"></tbody>
       </table>
+    </div>
+
+    <!-- Costo opportunità -->
+    <div class="costo-opportunita" id="costoOpportunita">
+      <div class="co-icon">&#9888;</div>
+      <div class="co-body">
+        <div class="co-title">Costo opportunit&agrave;</div>
+        <div class="co-text">Ogni mese senza lo storage, la Vostra azienda perde circa <strong id="coMensile">-</strong> di risparmio potenziale.</div>
+        <div class="co-sub" id="coDettaglio"></div>
+      </div>
     </div>
 
     <div class="powered">Powered by Expofin - Enjoy Future</div>
@@ -488,6 +504,11 @@
         tr.innerHTML = '<td>' + r[0] + '</td><td class="val' + (r[2] ? ' green' : '') + '">' + r[1] + '</td>';
         tbody.appendChild(tr);
       });
+
+      // Costo opportunità mensile
+      var risparmoMensile = Math.round(c.rispAnno1 / 12);
+      document.getElementById('coMensile').textContent = fmt(risparmoMensile) + ' \u20AC';
+      document.getElementById('coDettaglio').textContent = 'Pari a ' + fmt(c.rispAnno1) + ' \u20AC/anno di risparmio non realizzato, ovvero ' + fmt(Math.round(c.rispAnno1 / 52)) + ' \u20AC a settimana.';
     }
 
     // Slider

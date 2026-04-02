@@ -142,6 +142,12 @@
         </tfoot>
       </table>
       <button type="button" class="btn-add-storage" onclick="aggiungiRigaStorage()">+ Aggiungi storage</button>
+      <div id="suggerimento" style="display:none; margin-top:16px; background:#f0f6ff; border:1.5px solid #2e75b6; border-radius:10px; padding:16px;">
+        <div style="font-weight:700; color:#1a3a5c; margin-bottom:8px; font-size:0.95rem;">Configurazione suggerita</div>
+        <div id="suggPayback" style="margin-bottom:6px; font-size:0.88rem; color:#333;"></div>
+        <div id="suggROI" style="margin-bottom:8px; font-size:0.88rem; color:#333;"></div>
+        <div style="font-size:0.75rem; color:#888;">Basato sui dati inseriti (potenza fotovoltaico, ore luce, pausa pranzo, prezzi energia). Clicca "Applica" per usare la configurazione suggerita.</div>
+      </div>
     </div>
 
     <div class="card">
@@ -451,6 +457,79 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
     function fmtNum(n) { return n.toLocaleString('it-IT'); }
     function fmtEur(n) { return fmtNum(n) + ' \u20AC'; }
 
+    function calcolaSuggerimento() {
+      var kWp = parseFloat(document.getElementById('potenzaFTV').value) || 0;
+      var pv = parseFloat(document.getElementById('prezzoVendita').value) || 0;
+      var ca = parseFloat(document.getElementById('costoAcquisto').value) || 0;
+      var op = parseFloat(document.getElementById('orePausa').value) || 0;
+      var ol = parseFloat(document.getElementById('oreLuce').value) || 7;
+      var pnc = parseFloat(document.getElementById('pctNonConsumata').value) || 25;
+      if (!kWp || !ca || !pv) { document.getElementById('suggerimento').style.display = 'none'; return; }
+
+      var prodAnnua = kWp * 1200;
+      var mediaGG = Math.round(prodAnnua / 365);
+      var kWhPerOra = Math.round(mediaGG / ol);
+      var delta = ca - pv;
+      if (delta <= 0) { document.getElementById('suggerimento').style.display = 'none'; return; }
+
+      // Energia accumulabile max durante la pausa
+      var kWhPausa = Math.round(kWhPerOra * op);
+
+      var migliorePayback = null;
+      var miglioreROI = null;
+
+      // Prova ogni taglia singola, da 1 a 10 unità
+      CAPACITA_OPTIONS.forEach(function(cap) {
+        var prezzo = LISTINO[cap];
+        for (var n = 1; n <= 10; n++) {
+          var capTot = cap * n;
+          var costoTot = prezzo * n;
+          var kWhAcc = Math.min(kWhPausa, capTot);
+          var rispA = Math.floor(kWhAcc * delta * 5 * 52);
+          var rispB = Math.floor(capTot * delta * 52);
+          var rispTot = rispA + rispB;
+          var costoEff = Math.floor(costoTot * (1 - 0.672));
+          if (rispTot <= 0) continue;
+          var pb = costoEff / rispTot;
+          var roi10 = rispTot * 10 - costoEff;
+
+          if (!migliorePayback || pb < migliorePayback.payback) {
+            migliorePayback = { cap: cap, n: n, capTot: capTot, costoTot: costoTot, costoEff: costoEff, rispTot: rispTot, payback: pb, roi10: roi10 };
+          }
+          if (!miglioreROI || roi10 > miglioreROI.roi10) {
+            miglioreROI = { cap: cap, n: n, capTot: capTot, costoTot: costoTot, costoEff: costoEff, rispTot: rispTot, payback: pb, roi10: roi10 };
+          }
+        }
+      });
+
+      if (!migliorePayback) { document.getElementById('suggerimento').style.display = 'none'; return; }
+
+      function descConf(c) {
+        return (c.n > 1 ? c.n + ' x ' + fmtNum(c.cap) + ' kWh' : fmtNum(c.cap) + ' kWh') +
+          ' (' + fmtNum(c.capTot) + ' kWh totali) — Payback: ' + c.payback.toFixed(1).replace('.',',') + ' anni, ROI 10 anni: +' + fmtNum(c.roi10) + ' \u20AC';
+      }
+
+      function btnApplica(cap, n) {
+        return ' <button type="button" onclick="applicaSuggerimento(' + cap + ',' + n + ')" style="padding:3px 10px;font-size:0.78rem;background:#2e75b6;color:#fff;border:none;border-radius:4px;cursor:pointer;">Applica</button>';
+      }
+
+      var html1 = '<strong>Payback minimo:</strong> ' + descConf(migliorePayback) + btnApplica(migliorePayback.cap, migliorePayback.n);
+      var html2 = '';
+      if (miglioreROI.cap !== migliorePayback.cap || miglioreROI.n !== migliorePayback.n) {
+        html2 = '<strong>ROI massimo:</strong> ' + descConf(miglioreROI) + btnApplica(miglioreROI.cap, miglioreROI.n);
+      }
+
+      document.getElementById('suggPayback').innerHTML = html1;
+      document.getElementById('suggROI').innerHTML = html2;
+      document.getElementById('suggerimento').style.display = 'block';
+    }
+
+    function applicaSuggerimento(cap, n) {
+      // Svuota tabella e metti la configurazione suggerita
+      document.getElementById('storageBody').innerHTML = '';
+      aggiungiRigaStorage(cap, n);
+    }
+
     function aggiornaPreview() {
       const inp = getInputs();
       const c = calcola(inp);
@@ -465,6 +544,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       document.getElementById('calcRispTot').textContent = fmtEur(c.risparmioTotale) + '/anno';
       document.getElementById('calcCostoEff').textContent = fmtEur(c.costoEffettivo);
       document.getElementById('calcPayback').textContent = c.payback.toFixed(2).replace('.', ',') + ' anni';
+      calcolaSuggerimento();
     }
 
     function toggleTesti() {
