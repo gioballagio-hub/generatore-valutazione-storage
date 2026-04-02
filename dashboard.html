@@ -506,9 +506,16 @@
       });
 
       // Costo opportunità mensile
-      var risparmoMensile = Math.round(c.rispAnno1 / 12);
-      document.getElementById('coMensile').textContent = fmt(risparmoMensile) + ' \u20AC';
-      document.getElementById('coDettaglio').textContent = 'Pari a ' + fmt(c.rispAnno1) + ' \u20AC/anno di risparmio non realizzato, ovvero ' + fmt(Math.round(c.rispAnno1 / 52)) + ' \u20AC a settimana.';
+      var coMensileAnno1 = Math.round(c.rispAnno1 / 12);
+      if (aumentoPct > 0) {
+        var coMensileMedio = Math.round(c.rispMedioAnnuo / 12);
+        var coPerso10anni = Math.round(c.risparmiAnno.reduce(function(a,b){return a+b;},0));
+        document.getElementById('coMensile').textContent = fmt(coMensileAnno1) + ' \u20AC \u2192 ' + fmt(Math.round(c.rispAnno10 / 12)) + ' \u20AC/mese';
+        document.getElementById('coDettaglio').textContent = 'Oggi perdi ' + fmt(coMensileAnno1) + ' \u20AC/mese, ma con l\u2019aumento del ' + aumentoPct.toFixed(1).replace('.',',') + '% annuo tra 10 anni perderai ' + fmt(Math.round(c.rispAnno10 / 12)) + ' \u20AC/mese. In totale, in 10 anni di attesa perderesti ' + fmt(coPerso10anni) + ' \u20AC di risparmio.';
+      } else {
+        document.getElementById('coMensile').textContent = fmt(coMensileAnno1) + ' \u20AC';
+        document.getElementById('coDettaglio').textContent = 'Pari a ' + fmt(c.rispAnno1) + ' \u20AC/anno di risparmio non realizzato, ovvero ' + fmt(Math.round(c.rispAnno1 / 52)) + ' \u20AC a settimana.';
+      }
     }
 
     // Slider
