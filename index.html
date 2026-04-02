@@ -58,7 +58,7 @@
       <div class="form-grid">
         <div class="form-group full">
           <label for="nomeAzienda">Ragione Sociale</label>
-          <input type="text" id="nomeAzienda" value="MOLLIFICIO BORDIGNON Srl" placeholder="es. ROSSI SPA">
+          <input type="text" id="nomeAzienda" value="" placeholder="es. ROSSI SPA">
         </div>
         <div class="form-group">
           <label for="logoCliente">Logo Cliente (opzionale)</label>
@@ -71,14 +71,20 @@
         </div>
         <div class="form-group">
           <label for="potenzaFTV">Potenza fotovoltaico (kWp)</label>
-          <input type="number" id="potenzaFTV" value="450" step="1" min="1">
+          <input type="number" id="potenzaFTV" value="" step="1" min="1" placeholder="es. 450">
         </div>
         <div class="form-group">
           <label for="capacitaStorage">Capacit&agrave; Storage (kWh)</label>
           <select id="capacitaStorage">
-            <option value="261" selected>261 kWh - PMI / carichi contenuti</option>
-            <option value="1000">~1 MWh - Industria standard</option>
-            <option value="3350">3,35 MWh - Energivori / multi-turno</option>
+            <option value="10">10 kWh</option>
+            <option value="15">15 kWh</option>
+            <option value="20">20 kWh</option>
+            <option value="25">25 kWh</option>
+            <option value="30">30 kWh</option>
+            <option value="261" selected>261 kWh</option>
+            <option value="1075">1.075 kWh (~1 MWh)</option>
+            <option value="3350">3.350 kWh (~3,35 MWh)</option>
+            <option value="4180">4.180 kWh (~4,18 MWh)</option>
           </select>
         </div>
         <div class="form-group">
@@ -87,33 +93,40 @@
         </div>
         <div class="form-group">
           <label for="prezzoVendita">Prezzo vendita energia in rete (&euro;/kWh)</label>
-          <input type="number" id="prezzoVendita" value="0.09" step="0.01" min="0">
+          <input type="number" id="prezzoVendita" value="" step="0.01" min="0" placeholder="es. 0.09">
         </div>
         <div class="form-group">
           <label for="costoAcquisto">Costo acquisto energia dalla rete (&euro;/kWh)</label>
-          <input type="number" id="costoAcquisto" value="0.25" step="0.01" min="0">
+          <input type="number" id="costoAcquisto" value="" step="0.01" min="0" placeholder="es. 0.25">
         </div>
         <div class="form-group">
           <label for="orePausa">Durata pausa pranzo (ore)</label>
           <select id="orePausa">
-            <option value="1">1 h</option>
-            <option value="1.5" selected>1,5 h</option>
-            <option value="2">2 h</option>
-            <option value="2.5">2,5 h</option>
-            <option value="3">3 h</option>
+            <option value="0.25">0:15</option>
+            <option value="0.5">0:30</option>
+            <option value="0.75">0:45</option>
+            <option value="1">1:00</option>
+            <option value="1.25">1:15</option>
+            <option value="1.5" selected>1:30</option>
+            <option value="1.75">1:45</option>
+            <option value="2">2:00</option>
+            <option value="2.25">2:15</option>
+            <option value="2.5">2:30</option>
+            <option value="2.75">2:45</option>
+            <option value="3">3:00</option>
           </select>
         </div>
         <div class="form-group">
           <label for="pctNonConsumata">% energia non auto-consumata</label>
-          <input type="number" id="pctNonConsumata" value="25" step="1" min="0" max="100">
+          <input type="number" id="pctNonConsumata" value="" step="1" min="0" max="100" placeholder="es. 25">
         </div>
         <div class="form-group">
           <label for="oreLuce">Ore luce produttive fotovoltaico (h/gg)</label>
-          <input type="number" id="oreLuce" value="7" step="0.5" min="1" max="14">
+          <input type="number" id="oreLuce" value="" step="0.5" min="1" max="14" placeholder="es. 7">
         </div>
         <div class="form-group">
           <label for="costoStorage">Costo Storage (&euro;)</label>
-          <input type="number" id="costoStorage" value="70470" step="1" min="0">
+          <input type="number" id="costoStorage" value="" step="1" min="0" placeholder="es. 70470">
         </div>
       </div>
     </div>
@@ -218,7 +231,7 @@ Se dividiamo questa produzione giornaliera per le {oreLuce} h/gg produttive per 
 
         <div class="text-group">
           <label>Nota payback</label>
-          <textarea id="txtPaybackNota" rows="2">Considerando il costo indicativo dello Storage da {capacitaStorage} kW pari a {costoStorage} € (da confermare), riducibile del 43,2 %, grazie all'Iper-ammortamento previsto dall'ultima legge finanziaria (senza considerare altre misure eventualmente cumulabili quali la Nuova Sabatini o il Conto termico 3.0), abbiamo un costo effettivo pari a {costoEffettivo} €.</textarea>
+          <textarea id="txtPaybackNota" rows="2">Considerando il costo indicativo dello Storage da {capacitaStorage} kWh pari a {costoStorage} € (da confermare), e considerando la maggiorazione Iper-ammortamento pari a +180% (quindi si passa dal 100% al 280%) avremo un vantaggio fiscale complessivo del 67,2% (in 5 anni), che porta ad un costo effettivo dello storage pari a {costoEffettivo} €. (senza considerare altre misure eventualmente cumulabili)</textarea>
           <div class="hint">Segnaposto: {capacitaStorage}, {costoStorage}, {costoEffettivo}</div>
         </div>
 
@@ -337,7 +350,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       const risparmioA = Math.floor(kWhAccPomeriggio * delta * 5 * 52);
       const risparmioB = Math.floor(capacitaTotale * delta * 52);
       const risparmioTotale = risparmioA + risparmioB;
-      const costoEffettivo = Math.floor(costoStorageTotale * (1 - 0.432));
+      const costoEffettivo = Math.floor(costoStorageTotale * (1 - 0.672));
       const payback = risparmioTotale > 0 ? (costoEffettivo / risparmioTotale) : 0;
       return { produzioneAnnua, mediaGiornaliera, kWhPerOra, energiaImmessa, delta, kWhCalcolati, kWhAccPomeriggio, superaCap, risparmioA, risparmioB, risparmioTotale, costoEffettivo, payback, capacitaTotale, costoStorageTotale, nStorage: n };
     }
@@ -375,7 +388,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         txtTaglia: "La capacit\u00e0 di accumulo viene definita per coprire tipicamente:\n15\u201330% del fabbisogno energetico giornaliero, evitando sovradimensionamenti che allungherebbero il payback.\nQuindi, per il cliente {nomeCorto} consideriamo lo Storage da {capacitaStorage} kWh",
         txtCalcolo: "Considerando la produzione annua di energia stimata in {produzioneAnnua} kWh significa che, mediamente nell\u2019anno (non importa se in estate o in inverno), avremo una produzione giornaliera pari a {mediaGiornaliera} kWh;\nSe dividiamo questa produzione giornaliera per le {oreLuce} h/gg produttive per l\u2019impianto fotovoltaico, avremo, in media, {kWhPerOra} kWh prodotti per ogni ora di luce.",
         txtWeekend: "Vengono considerati solo i sabati o solo le domeniche perch\u00e9 di sabato o di domenica lo storage viene riempito in alcune ore (di solito il sabato) e l\u2019energia accumulata viene utilizzata solo il luned\u00ec successivo, visto che al sabato o alla domenica non sono previsti consumi.",
-        txtPaybackNota: "Considerando il costo indicativo dello Storage da {capacitaStorage} kW pari a {costoStorage} \u20AC (da confermare), riducibile del 43,2 %, grazie all\u2019 Iper-ammortamento previsto dall\u2019ultima legge finanziaria (senza considerare altre misure eventualmente cumulabili quali la Nuova Sabatini o il Conto termico 3.0), abbiamo un costo effettivo pari a {costoEffettivo} \u20AC.",
+        txtPaybackNota: "Considerando il costo indicativo dello Storage da {capacitaStorage} kWh pari a {costoStorage} \u20AC (da confermare), e considerando la maggiorazione Iper-ammortamento pari a +180% (quindi si passa dal 100% al 280%) avremo un vantaggio fiscale complessivo del 67,2% (in 5 anni), che porta ad un costo effettivo dello storage pari a {costoEffettivo} \u20AC. (senza considerare altre misure eventualmente cumulabili)",
         txtAbbreviazione: "il costo dell\u2019energia salir\u00e0 (come \u00e8 molto probabile)\nsi riesce a ridurre i costi energetici con l\u2019arbitraggio (distribuzione dei consumi nelle fasce F1\u2013F2\u2013F3)\nsi riducono o si evitano eventi critici (micro-interruzioni, buchi di tensione) che danneggiano la produzione aziendale",
         txtContratto: "investimento diretto,\nfinanziamento agevolato,\nE.P.C. (Energy Performance Contract) con remunerazione legata ai risparmi.",
         txtRisultato: "Un sistema di accumulo dimensionato su misura, che massimizza il ritorno economico e garantisce affidabilit\u00e0 operativa nel tempo.",
@@ -485,12 +498,11 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
     }
 
     function orePausaLabel(val) {
-      if (val === 1) return '1 h';
-      if (val === 1.5) return '1,5 h';
-      if (val === 2) return '2 h';
-      if (val === 2.5) return '2,5 h';
-      if (val === 3) return '3 h';
-      return val.toString().replace('.', ',') + ' h';
+      var ore = Math.floor(val);
+      var min = Math.round((val - ore) * 60);
+      if (min === 0) return ore + ' h';
+      if (ore === 0) return min + ' min';
+      return ore + ' h ' + min + ' min';
     }
 
     function oggi() {
@@ -964,7 +976,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
           kvRowSup('Risparmio totale annuo', fmtNum(c.risparmioTotale) + ' \u20AC/anno', true, '\u00B3'),
           kvRow('', ''),
           kvRow('Costo dello storage', fmtNum(c.costoStorageTotale) + ' \u20AC'),
-          kvRow('Beneficio Iper-ammortamento (43,2%)', '\u2013 ' + fmtNum(c.costoStorageTotale - c.costoEffettivo) + ' \u20AC'),
+          kvRow('Beneficio Iper-ammortamento (67,2%)', '\u2013 ' + fmtNum(c.costoStorageTotale - c.costoEffettivo) + ' \u20AC'),
           kvRowSup('Costo effettivo dell\u2019investimento', fmtNum(c.costoEffettivo) + ' \u20AC', false, '\u2074'),
           kvRow('', ''),
           kvRowSup('Tempo di ritorno dell\u2019investimento', c.payback.toFixed(1).replace('.', ',') + ' anni', true, '\u2075'),
@@ -1081,7 +1093,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
           new TableRow({ cantSplit: true, children: [
             dataCell('4', tBColW[0], true),
             dataCell('Costo effettivo storage', tBColW[1]),
-            dataCell(vars.costoStorage + ' \u20AC \u00D7 (1 \u2212 43,2%)', tBColW[2]),
+            dataCell(vars.costoStorage + ' \u20AC \u00D7 (1 \u2212 67,2%)', tBColW[2]),
             dataCell(vars.costoEffettivo + ' \u20AC', tBColW[3], true),
           ]}),
           new TableRow({ cantSplit: true, children: [

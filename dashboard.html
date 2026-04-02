@@ -234,7 +234,7 @@
     var deltaBase = D.costoAcquisto - D.prezzoVendita;
     var kWhCalcolati = Math.round(kWhPerOra * D.orePausa);
     var kWhAcc = Math.min(kWhCalcolati, capTotale);
-    var costoEff = Math.floor(costoStorTotale * (1 - 0.432));
+    var costoEff = Math.floor(costoStorTotale * (1 - 0.672));
     var kWhRecuperati = kWhAcc * 5 * 52 + capTotale * 52;
     var co2 = Math.round(kWhRecuperati * 0.000233 * 1000) / 1000;
     var alberi = Math.round(co2 / 0.022);
