@@ -25,6 +25,16 @@
     .calc-item .value { font-size: 1.1rem; font-weight: 700; color: #1a3a5c; }
     .calc-item.highlight { background: #e8f4e8; }
     .calc-item.highlight .value { color: #2d7a2d; }
+    .storage-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    .storage-table th { text-align: left; font-size: 0.8rem; color: #555; padding: 6px 4px; border-bottom: 2px solid #e8ecf1; }
+    .storage-table td { padding: 6px 4px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    .storage-table select, .storage-table input { padding: 8px 10px; border: 1.5px solid #d0d5dd; border-radius: 6px; font-size: 0.9rem; width: 100%; }
+    .storage-table .subtotale { font-weight: 600; color: #1a3a5c; font-size: 0.95rem; white-space: nowrap; }
+    .storage-table .btn-rm { background: none; border: none; color: #c00; font-size: 1.2rem; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+    .storage-table .btn-rm:hover { background: #fee; }
+    .storage-totale td { padding-top: 10px; border-top: 2px solid #1a3a5c; font-size: 0.95rem; color: #1a3a5c; }
+    .btn-add-storage { background: none; border: 1.5px dashed #2e75b6; color: #2e75b6; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; font-weight: 600; width: 100%; }
+    .btn-add-storage:hover { background: #f0f6ff; }
     .btn-row { display: flex; gap: 12px; }
     .btn { display: block; width: 100%; padding: 14px; background: #2e75b6; color: #fff; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     .btn:hover { background: #1e5a96; }
@@ -74,30 +84,12 @@
           <input type="number" id="potenzaFTV" value="" step="1" min="1" placeholder="es. 450">
         </div>
         <div class="form-group">
-          <label for="capacitaStorage">Capacit&agrave; Storage (kWh)</label>
-          <select id="capacitaStorage">
-            <option value="10">10 kWh</option>
-            <option value="15">15 kWh</option>
-            <option value="20">20 kWh</option>
-            <option value="25">25 kWh</option>
-            <option value="30">30 kWh</option>
-            <option value="261" selected>261 kWh</option>
-            <option value="1075">1.075 kWh (~1 MWh)</option>
-            <option value="3350">3.350 kWh (~3,35 MWh)</option>
-            <option value="4180">4.180 kWh (~4,18 MWh)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="nStorage">N. Storage</label>
-          <input type="number" id="nStorage" value="1" step="1" min="1" max="20">
-        </div>
-        <div class="form-group">
           <label for="prezzoVendita">Prezzo vendita energia in rete (&euro;/kWh)</label>
-          <input type="number" id="prezzoVendita" value="" step="0.01" min="0" placeholder="es. 0.09">
+          <input type="number" id="prezzoVendita" value="0.09" step="0.01" min="0">
         </div>
         <div class="form-group">
           <label for="costoAcquisto">Costo acquisto energia dalla rete (&euro;/kWh)</label>
-          <input type="number" id="costoAcquisto" value="" step="0.01" min="0" placeholder="es. 0.25">
+          <input type="number" id="costoAcquisto" value="0.25" step="0.01" min="0">
         </div>
         <div class="form-group">
           <label for="orePausa">Durata pausa pranzo (ore)</label>
@@ -124,11 +116,32 @@
           <label for="oreLuce">Ore luce produttive fotovoltaico (h/gg)</label>
           <input type="number" id="oreLuce" value="" step="0.5" min="1" max="14" placeholder="es. 7">
         </div>
-        <div class="form-group">
-          <label for="costoStorage">Costo Storage (&euro;)</label>
-          <input type="number" id="costoStorage" value="" step="1" min="0" placeholder="es. 70470">
-        </div>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Configurazione Storage</h2>
+      <table class="storage-table" id="storageTable">
+        <thead>
+          <tr>
+            <th>Capacit&agrave;</th>
+            <th>Qt&agrave;</th>
+            <th>Prezzo unit. &euro;</th>
+            <th>Subtotale</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="storageBody"></tbody>
+        <tfoot>
+          <tr class="storage-totale">
+            <td colspan="2" style="text-align:right; font-weight:700;">Totale:</td>
+            <td id="storageTotCap" style="font-weight:700;">-</td>
+            <td id="storageTotCosto" style="font-weight:700;">-</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <button type="button" class="btn-add-storage" onclick="aggiungiRigaStorage()">+ Aggiungi storage</button>
     </div>
 
     <div class="card">
@@ -319,31 +332,111 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
   <script>
     const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, LevelFormat, ImageRun, Table, TableRow, TableCell, WidthType, ShadingType, VerticalAlign, TabStopType, TabStopPosition, Header, PageBreak } = docx;
 
+    // Listino prezzi storage
+    var LISTINO = { 10: 3900, 15: 5850, 20: 7800, 25: 9750, 30: 11700, 261: 67860, 1075: 279500, 3350: 871000, 4180: 1086800 };
+    var CAPACITA_OPTIONS = [10, 15, 20, 25, 30, 261, 1075, 3350, 4180];
+
+    function creaSelectCapacita(selVal) {
+      var sel = '<select onchange="onStorageChange(this)">';
+      CAPACITA_OPTIONS.forEach(function(c) {
+        var label = c >= 1000 ? (c / 1000).toFixed(c % 1000 === 0 ? 0 : c === 1075 ? 3 : 2).replace('.', ',') + ' MWh' : c + ' kWh';
+        sel += '<option value="' + c + '"' + (c === selVal ? ' selected' : '') + '>' + label + '</option>';
+      });
+      sel += '</select>';
+      return sel;
+    }
+
+    function aggiungiRigaStorage(cap, qty, prezzo) {
+      var c = cap || 261;
+      var q = qty || 1;
+      var p = prezzo || LISTINO[c] || 0;
+      var tbody = document.getElementById('storageBody');
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + creaSelectCapacita(c) + '</td>' +
+        '<td><input type="number" value="' + q + '" min="1" step="1" onchange="aggiornaStorage()" style="width:70px;"></td>' +
+        '<td><input type="number" value="' + p + '" min="0" step="1" onchange="aggiornaStorage()" style="width:120px;"></td>' +
+        '<td class="subtotale">-</td>' +
+        '<td><button type="button" class="btn-rm" onclick="rimuoviRigaStorage(this)" title="Rimuovi">&times;</button></td>';
+      tbody.appendChild(tr);
+      aggiornaStorage();
+    }
+
+    function rimuoviRigaStorage(btn) {
+      var tbody = document.getElementById('storageBody');
+      if (tbody.rows.length <= 1) return;
+      btn.closest('tr').remove();
+      aggiornaStorage();
+    }
+
+    function onStorageChange(sel) {
+      var cap = parseInt(sel.value);
+      var tr = sel.closest('tr');
+      var prezzoInput = tr.querySelectorAll('input')[1];
+      if (LISTINO[cap] !== undefined) prezzoInput.value = LISTINO[cap];
+      aggiornaStorage();
+    }
+
+    function getStorageRighe() {
+      var righe = [];
+      var rows = document.getElementById('storageBody').rows;
+      for (var i = 0; i < rows.length; i++) {
+        var sel = rows[i].querySelector('select');
+        var inputs = rows[i].querySelectorAll('input');
+        righe.push({
+          capacita: parseInt(sel.value) || 0,
+          quantita: parseInt(inputs[0].value) || 1,
+          prezzoUnitario: parseFloat(inputs[1].value) || 0,
+        });
+      }
+      return righe;
+    }
+
+    function aggiornaStorage() {
+      var righe = getStorageRighe();
+      var totCap = 0, totCosto = 0;
+      var rows = document.getElementById('storageBody').rows;
+      for (var i = 0; i < righe.length; i++) {
+        var sub = righe[i].capacita * righe[i].quantita;
+        var subCosto = righe[i].prezzoUnitario * righe[i].quantita;
+        totCap += sub;
+        totCosto += subCosto;
+        rows[i].querySelector('.subtotale').textContent = fmtNum(subCosto) + ' \u20AC';
+      }
+      document.getElementById('storageTotCap').textContent = fmtNum(totCap) + ' kWh';
+      document.getElementById('storageTotCosto').textContent = fmtNum(totCosto) + ' \u20AC';
+      aggiornaPreview();
+    }
+
     function getInputs() {
+      var righe = getStorageRighe();
+      var capacitaTotale = 0, costoStorageTotale = 0;
+      righe.forEach(function(r) {
+        capacitaTotale += r.capacita * r.quantita;
+        costoStorageTotale += r.prezzoUnitario * r.quantita;
+      });
       return {
         nomeAzienda: document.getElementById('nomeAzienda').value.trim(),
         kWp: parseFloat(document.getElementById('potenzaFTV').value) || 0,
         prezzoVendita: parseFloat(document.getElementById('prezzoVendita').value) || 0,
         costoAcquisto: parseFloat(document.getElementById('costoAcquisto').value) || 0,
         orePausa: parseFloat(document.getElementById('orePausa').value) || 0,
-        capacitaStorage: parseFloat(document.getElementById('capacitaStorage').value) || 0,
-        nStorage: parseInt(document.getElementById('nStorage').value) || 1,
         pctNonConsumata: parseFloat(document.getElementById('pctNonConsumata').value) || 25,
         oreLuce: parseFloat(document.getElementById('oreLuce').value) || 7,
-        costoStorage: parseFloat(document.getElementById('costoStorage').value) || 0,
+        storageRighe: righe,
+        capacitaTotale: capacitaTotale,
+        costoStorageTotale: costoStorageTotale,
       };
     }
 
     function calcola(inp) {
       const produzioneAnnua = inp.kWp * 1200;
       const mediaGiornaliera = Math.round(produzioneAnnua / 365);
-      const kWhPerOra = Math.round(mediaGiornaliera / inp.oreLuce);
+      const kWhPerOra = Math.round(mediaGiornaliera / (inp.oreLuce || 7));
       const pctNC = (inp.pctNonConsumata || 25) / 100;
       const energiaImmessa = Math.round(produzioneAnnua * pctNC);
       const delta = inp.costoAcquisto - inp.prezzoVendita;
-      const n = inp.nStorage || 1;
-      const capacitaTotale = inp.capacitaStorage * n;
-      const costoStorageTotale = inp.costoStorage * n;
+      const capacitaTotale = inp.capacitaTotale || 0;
+      const costoStorageTotale = inp.costoStorageTotale || 0;
       const kWhCalcolati = Math.round(kWhPerOra * inp.orePausa);
       const superaCap = kWhCalcolati > capacitaTotale;
       const kWhAccPomeriggio = superaCap ? capacitaTotale : kWhCalcolati;
@@ -352,7 +445,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       const risparmioTotale = risparmioA + risparmioB;
       const costoEffettivo = Math.floor(costoStorageTotale * (1 - 0.672));
       const payback = risparmioTotale > 0 ? (costoEffettivo / risparmioTotale) : 0;
-      return { produzioneAnnua, mediaGiornaliera, kWhPerOra, energiaImmessa, delta, kWhCalcolati, kWhAccPomeriggio, superaCap, risparmioA, risparmioB, risparmioTotale, costoEffettivo, payback, capacitaTotale, costoStorageTotale, nStorage: n };
+      return { produzioneAnnua, mediaGiornaliera, kWhPerOra, energiaImmessa, delta, kWhCalcolati, kWhAccPomeriggio, superaCap, risparmioA, risparmioB, risparmioTotale, costoEffettivo, payback, capacitaTotale, costoStorageTotale, storageRighe: inp.storageRighe };
     }
 
     function fmtNum(n) { return n.toLocaleString('it-IT'); }
@@ -470,13 +563,34 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
     fetch('logo-expofin.png').then(function(r) { return r.arrayBuffer(); }).then(function(buf) { expofinLogoData = new Uint8Array(buf); });
 
     function init() {
-      document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', aggiornaPreview));
-      aggiornaPreview();
+      document.querySelectorAll('#nomeAzienda, #potenzaFTV, #prezzoVendita, #costoAcquisto, #orePausa, #pctNonConsumata, #oreLuce').forEach(function(el) { el.addEventListener('input', aggiornaPreview); });
+      aggiungiRigaStorage(); // prima riga vuota
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {
       init();
+    }
+
+    function buildStorageDescrizione(righe, capTotale) {
+      if (!righe || righe.length === 0) return 'uno Storage allo Stato Solido';
+      var nTotale = righe.reduce(function(s, r) { return s + r.quantita; }, 0);
+      if (righe.length === 1) {
+        var r = righe[0];
+        if (r.quantita === 1) return 'uno Storage allo Stato Solido da ' + fmtNum(r.capacita) + ' kWh';
+        return r.quantita + ' Storage allo Stato Solido da ' + fmtNum(r.capacita) + ' kWh ciascuno, per una capacit\u00e0 complessiva di ' + fmtNum(capTotale) + ' kWh';
+      }
+      // Multi-riga
+      var parti = righe.map(function(r) {
+        if (r.quantita === 1) return '1 Storage da ' + fmtNum(r.capacita) + ' kWh';
+        return r.quantita + ' Storage da ' + fmtNum(r.capacita) + ' kWh';
+      });
+      return parti.join(' + ') + ', per una capacit\u00e0 complessiva di ' + fmtNum(capTotale) + ' kWh (allo Stato Solido)';
+    }
+
+    function buildStorageDimensionato(righe) {
+      var nTotale = righe ? righe.reduce(function(s, r) { return s + r.quantita; }, 0) : 1;
+      return nTotale > 1 ? 'dimensionati' : 'dimensionato';
     }
 
     function nomeBreve(nome) {
@@ -590,11 +704,11 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       p.set('pv', inp.prezzoVendita);
       p.set('ca', inp.costoAcquisto);
       p.set('op', inp.orePausa);
-      p.set('cs', inp.capacitaStorage);
-      p.set('ns', inp.nStorage);
-      p.set('costo', inp.costoStorage);
       p.set('ol', inp.oreLuce);
       p.set('pnc', inp.pctNonConsumata);
+      // Storage righe: capacita:quantita:prezzo,capacita:quantita:prezzo,...
+      var stor = inp.storageRighe.map(function(r) { return r.capacita + ':' + r.quantita + ':' + r.prezzoUnitario; }).join(',');
+      p.set('stor', stor);
       return base + '?' + p.toString();
     }
 
@@ -631,12 +745,9 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         costoAcquisto: inp.costoAcquisto.toFixed(2).replace('.', ','),
         delta: c.delta.toFixed(2).replace('.', ','),
         capacitaStorage: fmtNum(c.capacitaTotale),
-        capacitaUnitaria: fmtNum(inp.capacitaStorage),
-        nStorage: c.nStorage,
-        storageDescrizione: c.nStorage > 1 ? c.nStorage + ' Storage allo Stato Solido da ' + fmtNum(inp.capacitaStorage) + ' kWh ciascuno, per una capacit\u00e0 complessiva di ' + fmtNum(c.capacitaTotale) + ' kWh' : 'uno Storage allo Stato Solido da ' + fmtNum(c.capacitaTotale) + ' kWh',
-        storageDimensionato: c.nStorage > 1 ? 'dimensionati' : 'dimensionato',
+        storageDescrizione: buildStorageDescrizione(c.storageRighe, c.capacitaTotale),
+        storageDimensionato: buildStorageDimensionato(c.storageRighe),
         costoStorage: fmtNum(c.costoStorageTotale),
-        costoStorageUnitario: fmtNum(inp.costoStorage),
         costoEffettivo: fmtNum(c.costoEffettivo),
         kWhPerOra: fmtNum(c.kWhPerOra),
         kWhCalcolati: fmtNum(c.kWhCalcolati),
@@ -819,10 +930,8 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
         costoAcquisto: inp.costoAcquisto.toFixed(2).replace('.', ','),
         delta: c.delta.toFixed(2).replace('.', ','),
         capacitaStorage: fmtNum(c.capacitaTotale),
-        capacitaUnitaria: fmtNum(inp.capacitaStorage),
-        nStorage: c.nStorage,
-        storageDescrizione: c.nStorage > 1 ? c.nStorage + ' Storage allo Stato Solido da ' + fmtNum(inp.capacitaStorage) + ' kWh ciascuno, per una capacit\u00e0 complessiva di ' + fmtNum(c.capacitaTotale) + ' kWh' : 'uno Storage allo Stato Solido da ' + fmtNum(c.capacitaTotale) + ' kWh',
-        storageDimensionato: c.nStorage > 1 ? 'dimensionati' : 'dimensionato',
+        storageDescrizione: buildStorageDescrizione(c.storageRighe, c.capacitaTotale),
+        storageDimensionato: buildStorageDimensionato(c.storageRighe),
         costoStorage: fmtNum(c.costoStorageTotale),
         costoStorageUnitario: fmtNum(inp.costoStorage), costoEffettivo: fmtNum(c.costoEffettivo),
         kWhPerOra: fmtNum(c.kWhPerOra), kWhCalcolati: fmtNum(c.kWhCalcolati),
@@ -907,8 +1016,7 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
           kvRow('Cliente', inp.nomeAzienda),
           kvRow('Data', oggi()),
           kvRow('Impianto fotovoltaico esistente', fmtNum(inp.kWp) + ' kWp'),
-          kvRow('N. Storage', c.nStorage.toString()),
-          kvRow('Capacit\u00e0 storage proposta', c.nStorage > 1 ? c.nStorage + ' x ' + fmtNum(inp.capacitaStorage) + ' kWh = ' + fmtNum(c.capacitaTotale) + ' kWh' : fmtNum(c.capacitaTotale) + ' kWh'),
+          kvRow('Storage proposto', vars.storageDescrizione),
         ],
       }));
       ch.push(emptyLine());

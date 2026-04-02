@@ -213,12 +213,23 @@
       prezzoVendita: parseFloat(params.get('pv')) || 0.09,
       costoAcquisto: parseFloat(params.get('ca')) || 0.25,
       orePausa: parseFloat(params.get('op')) || 1.5,
-      capacitaStorage: parseFloat(params.get('cs')) || 261,
-      nStorage: parseInt(params.get('ns')) || 1,
-      costoStorage: parseFloat(params.get('costo')) || 70470,
       oreLuce: parseFloat(params.get('ol')) || 7,
       pctNonConsumata: parseFloat(params.get('pnc')) || 25,
     };
+
+    // Parse storage righe da URL: stor=30:4:11700,261:1:67860
+    var storageRighe = [];
+    var storParam = params.get('stor') || '';
+    if (storParam) {
+      storParam.split(',').forEach(function(s) {
+        var p = s.split(':');
+        if (p.length >= 3) storageRighe.push({ capacita: parseInt(p[0]), quantita: parseInt(p[1]), prezzoUnitario: parseFloat(p[2]) });
+      });
+    }
+    if (storageRighe.length === 0) storageRighe.push({ capacita: 261, quantita: 1, prezzoUnitario: 67860 });
+
+    var capTotale = 0, costoStorTotale = 0;
+    storageRighe.forEach(function(r) { capTotale += r.capacita * r.quantita; costoStorTotale += r.prezzoUnitario * r.quantita; });
 
     function fmt(n) { return Math.round(n).toLocaleString('it-IT'); }
 
@@ -228,9 +239,6 @@
     var kWhPerOra = Math.round(mediaGG / D.oreLuce);
     var pctNC = (D.pctNonConsumata || 25) / 100;
     var energiaImmessa = Math.round(produzioneAnnua * pctNC);
-    var nStor = D.nStorage || 1;
-    var capTotale = D.capacitaStorage * nStor;
-    var costoStorTotale = D.costoStorage * nStor;
     var deltaBase = D.costoAcquisto - D.prezzoVendita;
     var kWhCalcolati = Math.round(kWhPerOra * D.orePausa);
     var kWhAcc = Math.min(kWhCalcolati, capTotale);
@@ -461,7 +469,8 @@
       var rows = [
         ['Impianto fotovoltaico', fmt(D.kWp) + ' kWp'],
         ['Produzione annua', fmt(produzioneAnnua) + ' kWh'],
-        nStor > 1 ? ['N. Storage', nStor + ' x ' + fmt(D.capacitaStorage) + ' kWh = ' + fmt(capTotale) + ' kWh totali'] : ['Capacit\u00e0 storage', fmt(capTotale) + ' kWh'],
+        ['Capacit\u00e0 storage totale', fmt(capTotale) + ' kWh'],
+      ].concat(storageRighe.length > 1 ? storageRighe.map(function(r, i) { return ['  \u2022 Storage ' + (i+1), r.quantita + ' x ' + fmt(r.capacita) + ' kWh (' + fmt(r.prezzoUnitario) + ' \u20AC/cad)']; }) : []).concat([
         ['Prezzo vendita rete', D.prezzoVendita.toFixed(2).replace('.',',') + ' \u20AC/kWh'],
         ['Costo acquisto rete', D.costoAcquisto.toFixed(2).replace('.',',') + ' \u20AC/kWh'],
         ['Aumento annuo energia', aumentoPct.toFixed(1).replace('.',',') + '%'],
@@ -469,11 +478,11 @@
         ['Risparmio anno 1', fmt(c.rispAnno1) + ' \u20AC/anno', true],
         aumentoPct > 0 ? ['Risparmio anno 10', fmt(c.rispAnno10) + ' \u20AC/anno', true] : null,
         aumentoPct > 0 ? ['Risparmio medio annuo', fmt(c.rispMedioAnnuo) + ' \u20AC/anno', true] : null,
-        ['Costo storage (lordo)', fmt(D.costoStorage) + ' \u20AC'],
+        ['Costo storage (lordo)', fmt(costoStorTotale) + ' \u20AC'],
         ['Costo effettivo (netto iper-amm.)', fmt(costoEff) + ' \u20AC'],
         ['Payback', c.payback < 99 ? c.payback.toFixed(2).replace('.',',') + ' anni' : '>10 anni'],
         ['ROI 10 anni', '+' + fmt(c.roi10) + ' \u20AC', true],
-      ].filter(Boolean);
+      ]).filter(Boolean);
       rows.forEach(function(r) {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>' + r[0] + '</td><td class="val' + (r[2] ? ' green' : '') + '">' + r[1] + '</td>';
