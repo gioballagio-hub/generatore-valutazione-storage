@@ -231,7 +231,8 @@
     var capTotale = 0, costoStorTotale = 0;
     storageRighe.forEach(function(r) { capTotale += r.capacita * r.quantita; costoStorTotale += r.prezzoUnitario * r.quantita; });
 
-    function fmt(n) { return Math.round(n).toLocaleString('it-IT'); }
+    var _fmtIT = new Intl.NumberFormat('it-IT', { useGrouping: true });
+    function fmt(n) { return _fmtIT.format(Math.round(n)); }
 
     // Dati fissi (non cambiano con lo slider)
     var produzioneAnnua = D.kWp * 1200;

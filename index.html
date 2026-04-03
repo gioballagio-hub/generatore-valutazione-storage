@@ -451,7 +451,8 @@ E.P.C. (Energy Performance Contract) — nessun investimento iniziale, remuneraz
       return { produzioneAnnua, mediaGiornaliera, kWhPerOra, energiaImmessa, delta, kWhCalcolati, kWhAccPomeriggio, superaCap, risparmioA, risparmioB, risparmioTotale, costoEffettivo, payback, capacitaTotale, costoStorageTotale, storageRighe: inp.storageRighe };
     }
 
-    function fmtNum(n) { return n.toLocaleString('it-IT'); }
+    var _fmtIT = new Intl.NumberFormat('it-IT', { useGrouping: true });
+    function fmtNum(n) { return _fmtIT.format(n); }
     function fmtEur(n) { return fmtNum(n) + ' \u20AC'; }
 
     // === ALGORITMO GENETICO per ottimizzazione storage ===
